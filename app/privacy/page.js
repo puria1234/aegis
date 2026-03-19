@@ -8,7 +8,7 @@ export default function PrivacyPage() {
         <nav style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 48px', height:'68px', borderBottom:'1px solid #141414' }}>
           <a href="/" style={{ display:'flex', alignItems:'center', gap:'10px', textDecoration:'none' }}>
             <img src="/favicon.png" width="24" height="24" alt="AEGIS" />
-            <span style={{ fontSize:'18px', fontWeight:'900', letterSpacing:'-0.02em', color:'#fff' }}>Aegis</span>
+            <span style={{ fontSize:'15px', fontWeight:'800', letterSpacing:'0.15em', textTransform:'uppercase', color:'#fff', lineHeight:1 }}>Aegis</span>
           </a>
           <a href="/" style={{ fontSize:'13px', color:'#555', textDecoration:'none' }}>← Back</a>
         </nav>

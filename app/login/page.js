@@ -169,7 +169,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div style={{ textAlign:'center', marginBottom:'28px' }}>
           <img src="/icon.png" width="48" height="48" alt="AEGIS" style={{ display: 'block', margin: '0 auto 20px auto' }} />
-          <div style={{ fontSize:'24px', fontWeight:900, letterSpacing:'-0.03em' }}>Aegis</div>
+          <div style={{ fontSize:'24px', fontWeight:'800', letterSpacing:'0.15em', textTransform:'uppercase', lineHeight:1, color:'#fff' }}>Aegis</div>
           <div style={{ fontSize:'12px', color:'#444', fontWeight:600, letterSpacing:'0.1em', textTransform:'uppercase', marginTop:'6px' }}>Warranty Guardian</div>
         </div>
 

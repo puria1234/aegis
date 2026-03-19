@@ -118,7 +118,7 @@ export default function LandingPage() {
       <nav id="navbar" ref={navRef} style={{ position: 'fixed', width: '100%', zIndex: 100, display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '68px', padding: '0 5vmin', background: 'rgba(8,8,8,0.85)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.04)', transition: 'border-color 0.3s ease' }}>
         <a href="/" className="nav-logo" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
           <img src="/favicon.png" width="28" height="28" alt="AEGIS" />
-          <span className="nav-logo-text" style={{ fontSize: '15px', fontWeight: '800', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#fff' }}>Aegis</span>
+          <span className="nav-logo-text" style={{ fontSize: '15px', fontWeight: '800', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#fff', lineHeight: 1 }}>Aegis</span>
         </a>
         
         {/* Desktop Links */}
@@ -412,7 +412,7 @@ export default function LandingPage() {
                     <nav style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 24px', height:'56px', borderBottom:'1px solid #141414', background:'rgba(8,8,8,0.95)', backdropFilter:'blur(20px)', position:'sticky', top:0, zIndex:100 }}>
                       <div style={{ display:'flex', alignItems:'center', gap:'10px' }}>
                         <img src="/icon.png" width="28" height="28" alt="AEGIS" style={{ borderRadius:'6px' }} />
-                        <span style={{ fontWeight:900, fontSize:'16px', letterSpacing:'-0.03em', color:'#fff' }}>AEGIS</span>
+                        <span style={{ fontSize:'15px', fontWeight:'800', letterSpacing:'0.15em', textTransform:'uppercase', color:'#fff', lineHeight:1 }}>AEGIS</span>
                         <span style={{ fontSize:'12px', fontWeight:500, color:'#444', letterSpacing:'0.02em', marginLeft:'2px' }}>Warranty Tracker</span>
                       </div>
                       <div style={{ display:'flex', alignItems:'center', gap:'8px' }}>
