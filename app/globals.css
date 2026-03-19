@@ -1,12 +1,28 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: 'Inter', sans-serif;
+  --font-sans: var(--font-inter), 'Inter', sans-serif;
+  --font-caps: var(--font-inter), 'Inter', sans-serif;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
-body { background: #0a0a0a; color: #ffffff; font-family: 'Inter', sans-serif; }
+body { background: #0a0a0a; color: #ffffff; font-family: var(--font-sans); }
+
+.eyebrow,
+.nav-link,
+.btn-cta,
+.btn-outline,
+.btn-cta-dark,
+.label,
+.stat-label,
+.ticker-item,
+.status-pill,
+.filter-pill,
+.tag,
+.mock-tag {
+  font-family: var(--font-caps);
+}
 
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: #111; }

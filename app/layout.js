@@ -1,7 +1,11 @@
 import { Inter } from 'next/font/google';
 import './globals.css';
 
-const inter = Inter({ subsets: ['latin'], weight: ['300','400','500','600','700','800','900'] });
+const inter = Inter({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700', '800', '900'],
+  variable: '--font-inter',
+});
 
 export const metadata = {
   title: 'Aegis',
@@ -37,7 +41,7 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={inter.className}>
+    <html lang="en" className={`${inter.className} ${inter.variable}`}>
       <head>
         <script dangerouslySetInnerHTML={{
           __html: `
