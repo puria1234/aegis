@@ -38,8 +38,8 @@ export default function LandingPage() {
   const navRef = useRef(null);
   const [user, setUser] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const ipadPopRef = useRef(null);
-  const [showIpadPopup, setShowIpadPopup] = useState(false);
+  const ipadSectionRef = useRef(null);
+  const ipadInnerRef = useRef(null);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (currentUser) => {
@@ -60,31 +60,40 @@ export default function LandingPage() {
     }, { threshold: 0.1 });
     document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
 
-    const ipadObserver = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          setShowIpadPopup(true);
-          ipadObserver.disconnect();
-        }
-      });
-    }, { threshold: 0.3 });
-    if (ipadPopRef.current) ipadObserver.observe(ipadPopRef.current);
+    // Scroll-driven iPad pop-out
+    const updateIpad = () => {
+      if (!ipadSectionRef.current || !ipadInnerRef.current) return;
+      const rect = ipadSectionRef.current.getBoundingClientRect();
+      const viewH = window.innerHeight;
+      // 0 when section top hits bottom of viewport, 1 when section is centered
+      const raw = (viewH - rect.top) / (viewH * 0.75 + rect.height * 0.5);
+      const p = Math.max(0, Math.min(1, raw));
+      // Ease in-out quad
+      const t = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+      const rotX  = 38 - t * 36;      // 38° tilted back → 2° (slight float tilt)
+      const rotY  = -12 + t * 10;     // -12° → -2°
+      const scale = 0.68 + t * 0.32;  // 0.68 → 1.0
+      const transY = 130 - t * 130;   // drops down → 0
+      ipadInnerRef.current.style.transform =
+        `perspective(2400px) translateY(${transY}px) rotateX(${rotX}deg) rotateY(${rotY}deg) scale(${scale})`;
+    };
 
     // Nav scroll effect
     const onScroll = () => {
-      if (!navRef.current) return;
-      if (window.scrollY > 40) {
-        navRef.current.style.borderBottomColor = 'rgba(255,255,255,0.07)';
-      } else {
-        navRef.current.style.borderBottomColor = 'rgba(255,255,255,0.04)';
+      if (navRef.current) {
+        navRef.current.style.borderBottomColor = window.scrollY > 40
+          ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.04)';
       }
+      updateIpad();
     };
     window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', updateIpad, { passive: true });
+    updateIpad();
 
     return () => {
       observer.disconnect();
-      ipadObserver.disconnect();
       window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', updateIpad);
     };
   }, []);
 
@@ -106,9 +115,9 @@ export default function LandingPage() {
   const previewStatusBg = { active: 'rgba(74,222,128,0.08)', expiring: 'rgba(245,158,11,0.08)', expired: 'rgba(239,68,68,0.08)' };
 
   const previewWarranties = [
-    { id: '1', productName: 'Sony WH-1000XM5', brand: 'Sony', category: 'Electronics', expires: 'Nov 12, 2026', remaining: '240d', progress: 35, status: 'active', price: '$349.00' },
-    { id: '2', productName: 'Dyson V15 Vacuum', brand: 'Dyson', category: 'Appliances', expires: 'Apr 2, 2026', remaining: '16d', progress: 88, status: 'expiring', price: '$699.00' },
-    { id: '3', productName: 'MacBook Pro 14"', brand: 'Apple', category: 'Electronics', expires: 'Mar 17, 2027', remaining: '364d', progress: 12, status: 'active', price: '$1,999.00' },
+    { id: '1', productName: 'Sony WH-1000XM5', brand: 'Sony', category: 'Electronics', expires: 'Nov 12, 2026', remaining: '240d left', progress: 35, status: 'active', price: '$349.00' },
+    { id: '2', productName: 'Dyson V15 Vacuum', brand: 'Dyson', category: 'Appliances', expires: 'Apr 2, 2026', remaining: '14d left', progress: 88, status: 'expiring', price: '$699.00' },
+    { id: '3', productName: 'MacBook Pro 14"', brand: 'Apple', category: 'Electronics', expires: 'Mar 17, 2027', remaining: '363d left', progress: 12, status: 'active', price: '$1,999.00' },
   ];
 
   return (
@@ -295,120 +304,54 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* STAT BAND */}
-      <div className="stat-band">
-        <div className="responsive-grid-3" style={{ maxWidth:'1280px', margin:'0 auto', display:'grid', gridTemplateColumns:'repeat(3,1fr)' }}>
-          <div className="stat-item reveal">
-            <div className="stat-number">∞</div>
-            <div className="stat-label">Warranties tracked</div>
-          </div>
-          <div className="stat-item reveal reveal-delay-1">
-            <div className="stat-number">9</div>
-            <div className="stat-label">Categories</div>
-          </div>
-          <div className="stat-item reveal reveal-delay-2">
-            <div className="stat-number">30</div>
-            <div className="stat-label">Day expiry alerts</div>
-          </div>
-        </div>
-      </div>
 
       {/* ── 3D IPAD DEMO ── */}
-      <section style={{ padding:'100px 24px 130px', textAlign:'center', overflow:'hidden', position:'relative' }}>
-        {/* ambient backdrop */}
-        <div style={{ position:'absolute', top:'40%', left:'50%', transform:'translate(-50%,-50%)', width:'900px', height:'500px', background:'radial-gradient(ellipse, rgba(255,255,255,0.025) 0%, transparent 65%)', pointerEvents:'none', zIndex:0 }} />
-        <div className="reveal" style={{ marginBottom:'64px', position:'relative', zIndex:1 }}>
-          <div className="eyebrow" style={{ marginBottom:'16px' }}>App Preview</div>
+      <section ref={ipadSectionRef} style={{ padding:'120px 24px 180px', textAlign:'center', overflow:'visible', position:'relative' }}>
+        {/* Ambient glow */}
+        <div style={{ position:'absolute', top:'45%', left:'50%', transform:'translate(-50%,-50%)', width:'1100px', height:'600px', background:'radial-gradient(ellipse, rgba(99,102,241,0.06) 0%, rgba(139,92,246,0.03) 40%, transparent 70%)', pointerEvents:'none', zIndex:0 }} />
+
+        <div className="reveal" style={{ marginBottom:'80px', position:'relative', zIndex:1 }}>
+          <div className="eyebrow" style={{ marginBottom:'16px' }}>The App</div>
           <h2 className="headline-lg" style={{ marginBottom:'16px' }}>Your warranties,<br/>beautifully organized.</h2>
           <p className="body-text" style={{ maxWidth:'420px', margin:'0 auto' }}>Everything tracked in one clean dashboard. Always know what's covered and what's about to expire.</p>
         </div>
 
-        {/* scene */}
-        <div style={{ position:'relative', zIndex:1, display:'flex', justifyContent:'center', alignItems:'center', padding:'10px 0 80px', userSelect:'none' }}>
-          <div
-            ref={ipadPopRef}
-            style={{
-              opacity: showIpadPopup ? 1 : 0,
-              transform: showIpadPopup ? 'translateY(0) scale(1)' : 'translateY(60px) scale(0.9)',
-              transition:'opacity 0.6s ease, transform 0.85s cubic-bezier(0.22,1,0.36,1)',
-            }}
-          >
-            <div className="ipad-scale-wrapper" style={{ position:'relative', display:'inline-block', perspective:'2600px' }}>
-            <div
-              className="ipad-rotation-wrapper"
-              style={{
-                transform:'rotateX(11deg) rotateY(-15deg) rotateZ(1.2deg)',
-                transformOrigin:'center center',
-                transformStyle:'preserve-3d',
-                position:'relative',
-                willChange:'transform',
-              }}
-            >
-              <div
-                style={{
+        {/* iPad scene */}
+        <div style={{ position:'relative', zIndex:1, display:'flex', justifyContent:'center', alignItems:'center', userSelect:'none', paddingBottom:'60px' }}>
+
+          {/* This wrapper gets the scroll-driven 3D transform */}
+          <div ref={ipadInnerRef} style={{ display:'inline-block', transformStyle:'preserve-3d', willChange:'transform', transformOrigin:'center bottom' }}>
+
+            <div className="ipad-scale-wrapper" style={{ position:'relative', display:'inline-block' }}>
+
+              {/* ── iPad Pro PNG frame ── */}
+              {/* Screen area in SVG: x=30..910, y=16..664 out of 940×680 */}
+              {/* As percentages: left=3.19%, top=2.35%, width=93.62%, height=95.29% */}
+              <div style={{ width:'940px', height:'680px', position:'relative' }}>
+
+                {/* iPad PNG — behind the content, bezels frame the screen area visually */}
+                <img
+                  src="/ipad_landscape.png"
+                  alt="iPad Pro"
+                  width={940} height={680}
+                  style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none', zIndex:1 }}
+                />
+
+                {/* Screen content — on top of the PNG, fills exactly the screen area (x=30..910 y=16..664) */}
+                <div style={{
                   position:'absolute',
-                  inset:'52px 40px -58px 40px',
-                  background:'radial-gradient(ellipse at center, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.2) 48%, rgba(0,0,0,0) 76%)',
-                  transform:'translateZ(-110px) rotateX(90deg)',
-                  filter:'blur(12px)',
-                  pointerEvents:'none',
-                }}
-              />
-              <div style={{
-                width:'920px',
-                maxWidth:'92vw',
-                height:'640px',
-                marginTop:'-26px',
-                border:'4px solid #6c6c6c',
-                padding:'14px',
-                background:'linear-gradient(165deg, #2a2a2a 0%, #232323 42%, #1c1c1c 100%)',
-                borderRadius:'30px',
-                boxShadow:[
-                  '0 0 rgba(0,0,0,0.3)',
-                  '0 9px 20px rgba(0,0,0,0.29)',
-                  '0 37px 37px rgba(0,0,0,0.26)',
-                  '0 84px 50px rgba(0,0,0,0.15)',
-                  '0 149px 60px rgba(0,0,0,0.04)',
-                  '0 233px 65px rgba(0,0,0,0.01)',
-                ].join(','),
-                position:'relative',
-                transformStyle:'preserve-3d',
-                overflow:'visible',
-              }}>
-                <div
-                  style={{
-                    position:'absolute',
-                    top:'26px',
-                    right:'-12px',
-                    width:'12px',
-                    height:'calc(100% - 52px)',
-                    borderTopRightRadius:'12px',
-                    borderBottomRightRadius:'12px',
-                    background:'linear-gradient(180deg, #3a3a3a, #2a2a2a 42%, #171717)',
-                    boxShadow:'inset -1px 0 0 rgba(255,255,255,0.15), inset 1px 0 0 rgba(0,0,0,0.45)',
-                    transform:'rotateY(76deg) translateZ(-1px)',
-                    transformOrigin:'left center',
-                    pointerEvents:'none',
-                  }}
-                />
-                <div
-                  style={{
-                    position:'absolute',
-                    left:'30px',
-                    right:'18px',
-                    bottom:'-11px',
-                    height:'11px',
-                    borderBottomLeftRadius:'14px',
-                    borderBottomRightRadius:'14px',
-                    background:'linear-gradient(180deg, #2d2d2d 0%, #141414 100%)',
-                    boxShadow:'0 9px 18px rgba(0,0,0,0.45)',
-                    transform:'rotateX(-78deg)',
-                    transformOrigin:'top center',
-                    pointerEvents:'none',
-                  }}
-                />
-                <div style={{ height:'100%', width:'100%', overflow:'hidden', borderRadius:'22px', background:'#080808', boxShadow:'inset 0 0 0 1px rgba(255,255,255,0.03), inset 0 0 0 2px rgba(0,0,0,0.55)' }}>
-                  <div style={{ width:'1200px', minHeight:'860px', transform:'scale(0.72)', transformOrigin:'top left', pointerEvents:'none', textAlign:'left', background:'#080808', color:'#fff', fontFamily:'Inter, sans-serif' }}>
+                  left:'30px', top:'16px', right:'30px', bottom:'16px',
+                  borderRadius:'6px',
+                  overflow:'hidden',
+                  background:'#080808',
+                  zIndex:2,
+                }}>
+
+                  {/* Anti-glare coating texture (subtle) */}
+                  <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0.01) 40%, transparent 60%)', zIndex:10, pointerEvents:'none', borderRadius:'22px' }} />
+
+                  {/* App UI content at full 1200px scale */}
+                  <div style={{ width:'1200px', minHeight:'860px', transform:'scale(0.726)', transformOrigin:'top left', pointerEvents:'none', textAlign:'left', background:'#080808', color:'#fff', fontFamily:'Inter, sans-serif' }}>
                     <nav style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 24px', height:'56px', borderBottom:'1px solid #141414', background:'rgba(8,8,8,0.95)', backdropFilter:'blur(20px)', position:'sticky', top:0, zIndex:100 }}>
                       <div style={{ display:'flex', alignItems:'center', gap:'10px' }}>
                         <img src="/icon.png" width="28" height="28" alt="AEGIS" style={{ borderRadius:'6px' }} />
@@ -464,10 +407,6 @@ export default function LandingPage() {
                           Expiry (Soonest)
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
                         </div>
-                        <button style={{ display:'inline-flex', alignItems:'center', gap:'8px', background:'transparent', color:'#999', fontWeight:500, borderRadius:'8px', padding:'9px 16px', border:'1px solid #2a2a2a', fontSize:'13px' }}>
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
-                          Export
-                        </button>
                         <div style={{ display:'flex', gap:'4px' }}>
                           {[true, false].map((active, idx) => (
                             <div key={idx} style={{ padding:'7px 10px', borderRadius:'6px', background:active ? '#fff' : 'transparent', border:`1px solid ${active ? '#fff' : '#2a2a2a'}`, color:active ? '#000' : '#666', lineHeight:1 }}>
@@ -495,65 +434,83 @@ export default function LandingPage() {
                           const color = previewStatusColor[w.status];
                           const bg = previewStatusBg[w.status];
                           return (
-                            <div key={w.id} style={{ background:'#111', border:'1px solid #1e1e1e', borderRadius:'12px', padding:'18px' }}>
-                              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'14px' }}>
-                                <div style={{ display:'flex', alignItems:'center', gap:'10px', flex:1, minWidth:0 }}>
-                                  <div style={{ width:28, height:28, borderRadius:'7px', background:'#161616', border:'1px solid #252525', display:'flex', alignItems:'center', justifyContent:'center', color:'#888', flexShrink:0 }}>
-                                    <PreviewCategoryIcon category={w.category} />
+                            <div key={w.id} style={{ background:'#111', border:'1px solid #1e1e1e', borderRadius:'12px', padding:0, overflow:'hidden', display:'flex', flexDirection:'column' }}>
+                              {/* Card body */}
+                              <div style={{ padding:'20px 20px 16px', flex:1 }}>
+                                {/* Top row: category tag left, status badge right */}
+                                <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:'10px', marginBottom:'12px' }}>
+                                  <div style={{ minWidth:0, flex:1 }}>
+                                    {/* Category tag */}
+                                    <div style={{ display:'inline-flex', alignItems:'center', gap:'5px', background:'#161616', border:'1px solid #222', borderRadius:'6px', padding:'4px 9px', marginBottom:'9px', color:'#666', fontSize:'11px', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.05em' }}>
+                                      <PreviewCategoryIcon category={w.category} />
+                                      {w.category}
+                                    </div>
+                                    {/* Product name */}
+                                    <div style={{ fontSize:'16px', fontWeight:800, letterSpacing:'-0.02em', color:'#f0f0f0', lineHeight:1.25 }}>{w.productName}</div>
+                                    <div style={{ fontSize:'12px', color:'#555', marginTop:'3px' }}>{w.brand}</div>
                                   </div>
-                                  <div style={{ minWidth:0 }}>
-                                    <div style={{ fontWeight:700, fontSize:'14px', color:'#f0f0f0', letterSpacing:'-0.02em' }}>{w.productName}</div>
-                                    <div style={{ fontSize:'11px', color:'#555', marginTop:'1px' }}>{w.brand}</div>
+                                  {/* Status badge */}
+                                  <div style={{ display:'flex', alignItems:'center', gap:'5px', background:bg, border:`1px solid ${color}30`, borderRadius:'20px', padding:'4px 10px', flexShrink:0 }}>
+                                    <div style={{ width:5, height:5, borderRadius:'50%', background:color }} />
+                                    <span style={{ fontSize:'10px', fontWeight:700, color:color, textTransform:'uppercase', letterSpacing:'0.08em' }}>{w.status}</span>
                                   </div>
                                 </div>
-                                <div style={{ display:'flex', alignItems:'center', gap:'6px', background:bg, border:`1px solid ${color}22`, borderRadius:'20px', padding:'3px 8px', flexShrink:0 }}>
-                                  <div style={{ width:5, height:5, borderRadius:'50%', background:color }} />
-                                  <span style={{ fontSize:'10px', fontWeight:700, color:color, textTransform:'uppercase', letterSpacing:'0.08em' }}>{w.status}</span>
-                                </div>
-                              </div>
-                              <div style={{ marginBottom:'12px' }}>
-                                <span style={{ display:'inline-flex', alignItems:'center', gap:'5px', padding:'4px 10px', borderRadius:'6px', fontSize:'11px', fontWeight:600, background:'#1a1a1a', color:'#777', border:'1px solid #242424', textTransform:'uppercase', letterSpacing:'0.05em' }}>{w.category}</span>
-                              </div>
-                              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px', marginBottom:'14px' }}>
-                                <div style={{ background:'#0d0d0d', border:'1px solid #1a1a1a', borderRadius:'8px', padding:'8px' }}>
-                                  <div style={{ fontSize:'10px', color:'#444', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:'2px' }}>Expires</div>
-                                  <div style={{ fontSize:'12px', color:'#ccc', fontWeight:600 }}>{w.expires}</div>
-                                </div>
-                                <div style={{ background:'#0d0d0d', border:'1px solid #1a1a1a', borderRadius:'8px', padding:'8px' }}>
-                                  <div style={{ fontSize:'10px', color:'#444', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:'2px' }}>Remaining</div>
-                                  <div style={{ fontSize:'12px', fontWeight:700, color:color }}>{w.remaining}</div>
-                                </div>
-                              </div>
-                              <div style={{ marginBottom:'6px' }}>
-                                <div style={{ height:'4px', borderRadius:'2px', background:'#1a1a1a', overflow:'hidden' }}>
+                                {/* Progress bar */}
+                                <div style={{ height:'4px', borderRadius:'2px', background:'#1a1a1a', overflow:'hidden', marginBottom:'10px' }}>
                                   <div style={{ height:'100%', borderRadius:'2px', width:`${w.progress}%`, background:color }} />
                                 </div>
+                                {/* Expiry + remaining */}
+                                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                                  <div style={{ fontSize:'12px', color:'#555' }}>{w.expires}</div>
+                                  <div style={{ fontSize:'12px', fontWeight:700, color }}>{w.remaining}</div>
+                                </div>
                               </div>
-                              <div style={{ marginTop:'12px', paddingTop:'12px', borderTop:'1px solid #161616', fontSize:'12px', color:'#555' }}>
-                                <span style={{ color:'#333' }}>Value:</span> <span style={{ color:'#888', fontWeight:600 }}>{w.price}</span>
+                              {/* Footer bar */}
+                              <div style={{ borderTop:'1px solid #161616', padding:'11px 20px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                                <div style={{ fontSize:'12px', color:'#555', fontWeight:500 }}>{w.price}</div>
+                                <div style={{ display:'flex', alignItems:'center', gap:'4px', background:'#1a1a1a', border:'1px solid #2a2a2a', borderRadius:'6px', color:'#666', fontSize:'10px', fontWeight:700, padding:'5px 9px', letterSpacing:'0.04em', textTransform:'uppercase' }}>
+                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                  Edit
+                                </div>
                               </div>
                             </div>
                           );
                         })}
                       </div>
                     </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            </div>
-          </div>
-        </div>
+
+                    {/* ── Demo FAB: File a Claim ── */}
+                    <div style={{ position:'sticky', bottom:'20px', display:'flex', justifyContent:'flex-end', paddingRight:'24px', marginTop:'16px' }}>
+                      <div style={{ display:'inline-flex', alignItems:'center', gap:'9px', background:'#fff', borderRadius:'14px', color:'#000', fontSize:'13px', fontWeight:700, padding:'13px 20px', boxShadow:'0 4px 24px rgba(0,0,0,0.3), 0 1px 4px rgba(0,0,0,0.15)', fontFamily:'Inter, sans-serif', letterSpacing:'0.01em', cursor:'default' }}>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        File a Claim
+                      </div>
+                    </div>
+
+                  </div>{/* end screen content */}
+                </div>{/* end screen overlay */}
+
+              </div>{/* end iPad PNG wrapper */}
+
+              {/* ── Ground shadow ── */}
+              <div style={{ position:'absolute', top:'100%', left:'8%', right:'8%', height:'100px', background:'radial-gradient(ellipse, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.3) 50%, transparent 75%)', filter:'blur(24px)', transform:'translateY(-30px) scaleY(0.4)', pointerEvents:'none', zIndex:-1 }} />
+
+              {/* ── Purple ambient glow ── */}
+              <div style={{ position:'absolute', inset:'-40px', borderRadius:'80px', background:'radial-gradient(ellipse, rgba(99,102,241,0.08) 0%, transparent 70%)', filter:'blur(30px)', pointerEvents:'none', zIndex:-2 }} />
+
+            </div>{/* end ipad-scale-wrapper */}
+          </div>{/* end ipadInnerRef */}
+        </div>{/* end scene */}
 
         <style>{`
-          @media (max-width: 1024px) {
-            .ipad-scale-wrapper { transform: scale(0.84); transform-origin: top center; margin-bottom: -88px; }
+          @media (max-width: 1080px) {
+            .ipad-scale-wrapper { transform: scale(0.82); transform-origin: top center; margin-bottom: -102px; }
           }
-          @media (max-width: 780px) {
-            .ipad-scale-wrapper { transform: scale(0.56); transform-origin: top center; margin-bottom: -236px; }
+          @media (max-width: 800px) {
+            .ipad-scale-wrapper { transform: scale(0.56); transform-origin: top center; margin-bottom: -250px; }
           }
-          @media (max-width: 500px) {
-            .ipad-scale-wrapper { transform: scale(0.42); margin-bottom: -322px; }
+          @media (max-width: 520px) {
+            .ipad-scale-wrapper { transform: scale(0.40); transform-origin: top center; margin-bottom: -360px; }
           }
         `}</style>
       </section>
@@ -575,7 +532,7 @@ export default function LandingPage() {
               </svg>
             </div>
             <div className="feature-title">Universal Tracking</div>
-            <div className="feature-desc">Track warranties across every product category — from sneakers to refrigerators to cars. If you bought it, Aegis protects it.</div>
+            <div className="feature-desc">Track warranties across every product category, from sneakers to refrigerators to cars. If you bought it, Aegis protects it.</div>
           </div>
 
           <div className="feature-card reveal reveal-delay-1">
@@ -601,7 +558,7 @@ export default function LandingPage() {
               </svg>
             </div>
             <div className="feature-title">Coverage Progress</div>
-            <div className="feature-desc">Visual progress bars show at a glance how much of your warranty coverage remains. Green to amber to red — know exactly where you stand.</div>
+            <div className="feature-desc">Visual progress bars show at a glance how much of your warranty coverage remains. Green to amber to red, know exactly where you stand.</div>
           </div>
 
           <div className="feature-card reveal reveal-delay-3">
@@ -618,23 +575,24 @@ export default function LandingPage() {
           <div className="feature-card reveal reveal-delay-4">
             <div className="feature-icon">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                <rect x="2" y="3" width="20" height="14" rx="2"/>
+                <line x1="8" y1="21" x2="16" y2="21"/>
+                <line x1="12" y1="17" x2="12" y2="21"/>
+                <path d="M9 8l1.5 1.5L13 7"/>
               </svg>
             </div>
-            <div className="feature-title">Smart Filtering</div>
-            <div className="feature-desc">Filter by status — active, expiring, or expired — or drill into a specific category. Combined with multi-field sorting for total control.</div>
+            <div className="feature-title">AI Receipt Scanning</div>
+            <div className="feature-desc">Snap a photo of any receipt and let AI instantly extract the product, brand, purchase date, price, and retailer. No manual entry needed.</div>
           </div>
 
           <div className="feature-card reveal reveal-delay-5">
             <div className="feature-icon">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="7 10 12 15 17 10"/>
-                <line x1="12" y1="15" x2="12" y2="3"/>
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
               </svg>
             </div>
-            <div className="feature-title">CSV Export</div>
-            <div className="feature-desc">Export your entire warranty database as a CSV file with one click. Take your data wherever you need it — no lock-in, ever.</div>
+            <div className="feature-title">AI Claim Assistant</div>
+            <div className="feature-desc">Filing a warranty claim is painful. Aegis AI guides you through it, drafting dispute letters, suggesting next steps, and knowing exactly what to say.</div>
           </div>
 
         </div>

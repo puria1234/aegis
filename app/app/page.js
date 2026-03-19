@@ -142,6 +142,8 @@ export default function AppPage() {
   const SCAN_LIMIT = 5;
 
   // ── AI claim assistant ─────────────────────────────────────────────────────
+  const [showClaimPicker, setShowClaimPicker] = useState(false);
+  const [claimPickerSearch, setClaimPickerSearch] = useState('');
   const [showClaimModal, setShowClaimModal] = useState(false);
   const [claimWarranty, setClaimWarranty] = useState(null);
   const [claimMessages, setClaimMessages] = useState([]);
@@ -612,55 +614,60 @@ export default function AppPage() {
       return Math.min(100, Math.max(0, Math.round((elapsed/total)*100)));
     })();
     return (
-      <div key={w.id} className="warranty-card" onClick={() => { setViewId(w.id); setShowViewModal(true); }} style={{ cursor:'pointer' }}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'12px' }}>
-          <div style={{ display:'flex', alignItems:'center', gap:'8px', flex:1, minWidth:0 }}>
-            <div style={{ width:28, height:28, borderRadius:'7px', background:'#161616', border:'1px solid #252525', display:'flex', alignItems:'center', justifyContent:'center', color:'#888', flexShrink:0 }}>
-              <CategoryIcon cat={w.category} />
+      <div key={w.id} className="warranty-card" onClick={() => { setViewId(w.id); setShowViewModal(true); }} style={{ cursor:'pointer', padding:0, overflow:'hidden', display:'flex', flexDirection:'column' }}>
+
+        {/* ── Card body ── */}
+        <div style={{ padding:'20px 20px 16px', flex:1 }}>
+
+          {/* Top: category tag left, status badge right */}
+          <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:'10px', marginBottom:'12px' }}>
+            <div style={{ minWidth:0, flex:1 }}>
+              {/* Category tag with icon */}
+              {w.category && (
+                <div style={{ display:'inline-flex', alignItems:'center', gap:'5px', background:'#161616', border:'1px solid #222', borderRadius:'6px', padding:'4px 9px', marginBottom:'9px', color:'#666', fontSize:'11px', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.05em' }}>
+                  <CategoryIcon cat={w.category} />
+                  {w.category}
+                </div>
+              )}
+              {/* Product name */}
+              <div style={{ fontSize:'16px', fontWeight:800, letterSpacing:'-0.02em', color:'#f0f0f0', lineHeight:1.25 }}>{w.productName}</div>
+              {w.brand && <div style={{ fontSize:'12px', color:'#555', marginTop:'3px' }}>{w.brand}</div>}
             </div>
-            <div style={{ minWidth:0 }}>
-              <div style={{ fontWeight:700, fontSize:'14px', color:'#f0f0f0', letterSpacing:'-0.02em' }}>{w.productName}</div>
-              {w.brand && <div style={{ fontSize:'11px', color:'#555', marginTop:'1px' }}>{w.brand}</div>}
+            {/* Status badge */}
+            <div style={{ display:'flex', alignItems:'center', gap:'5px', background:sBg, border:`1px solid ${sColor}30`, borderRadius:'20px', padding:'4px 10px', flexShrink:0 }}>
+              <div style={{ width:5, height:5, borderRadius:'50%', background:sColor }} />
+              <span style={{ fontSize:'10px', fontWeight:700, color:sColor, textTransform:'uppercase', letterSpacing:'0.08em' }}>{status}</span>
             </div>
           </div>
-          <div style={{ display:'flex', alignItems:'center', gap:'6px', background:sBg, border:`1px solid ${sColor}22`, borderRadius:'20px', padding:'3px 8px', flexShrink:0 }}>
-            <div style={{ width:5, height:5, borderRadius:'50%', background:sColor }}></div>
-            <span style={{ fontSize:'10px', fontWeight:700, color:sColor, textTransform:'uppercase', letterSpacing:'0.08em' }}>{status}</span>
+
+          {/* Progress bar */}
+          <div className="progress-bar" style={{ marginBottom:'10px' }}>
+            <div className="progress-fill" style={{ width:`${progressPct}%`, background:sColor }} />
+          </div>
+
+          {/* Expiry date + days remaining */}
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+            <div style={{ fontSize:'12px', color:'#555' }}>{formatDate(w.expiryDate)}</div>
+            <div style={{ fontSize:'12px', fontWeight:700, color:sColor }}>
+              {days < 0 ? `${Math.abs(days)}d ago` : `${days}d left`}
+            </div>
           </div>
         </div>
-        {w.category && (
-          <div style={{ marginBottom:'10px' }}>
-            <span className="tag">{w.category}</span>
+
+        {/* ── Footer bar ── */}
+        <div style={{ borderTop:'1px solid #161616', padding:'11px 20px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+          <div style={{ fontSize:'12px', color:'#555', fontWeight:500 }}>
+            {w.price ? formatPrice(w.price) : '—'}
           </div>
-        )}
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'8px', marginBottom:'12px' }}>
-          <div style={{ background:'#0d0d0d', border:'1px solid #1a1a1a', borderRadius:'8px', padding:'8px' }}>
-            <div style={{ fontSize:'10px', color:'#444', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:'2px' }}>Expires</div>
-            <div style={{ fontSize:'12px', color:'#ccc', fontWeight:600 }}>{formatDate(w.expiryDate)}</div>
-          </div>
-          <div style={{ background:'#0d0d0d', border:'1px solid #1a1a1a', borderRadius:'8px', padding:'8px' }}>
-            <div style={{ fontSize:'10px', color:'#444', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:'2px' }}>{days < 0 ? 'Expired' : 'Remaining'}</div>
-            <div style={{ fontSize:'12px', fontWeight:700, color:sColor }}>{days < 0 ? `${Math.abs(days)}d ago` : `${days}d`}</div>
-          </div>
-        </div>
-        {w.purchaseDate && (
-          <div style={{ marginBottom:'4px' }}>
-            <div className="progress-bar"><div className="progress-fill" style={{ width:`${progressPct}%`, background: status==='expired'?'#ef4444':status==='expiring'?'#f59e0b':'#4ade80' }}></div></div>
-          </div>
-        )}
-        <div style={{ marginTop:'10px', paddingTop:'10px', borderTop:'1px solid #161616', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-          <div style={{ fontSize:'12px', color:'#555' }}>
-            {w.price ? <><span style={{ color:'#333' }}>Value:</span> <span style={{ color:'#888', fontWeight:600 }}>{formatPrice(w.price)}</span></> : <span style={{ color:'#2a2a2a' }}>—</span>}
-          </div>
+          {/* Edit */}
           <button
             type="button"
-            onClick={e => { e.stopPropagation(); openClaimModal(w); }}
-            style={{ display:'flex', alignItems:'center', gap:'5px', background:'#ffffff', border:'1px solid #ffffff', borderRadius:'6px', color:'#000000', fontSize:'10px', fontWeight:700, padding:'4px 8px', cursor:'pointer', transition:'all 0.15s', fontFamily:'Inter, sans-serif', letterSpacing:'0.04em' }}
-            onMouseOver={e => { e.currentTarget.style.background='#e5e7eb'; e.currentTarget.style.borderColor='#e5e7eb'; }}
-            onMouseOut={e => { e.currentTarget.style.background='#ffffff'; e.currentTarget.style.borderColor='#ffffff'; }}
-            title="Open AI claim assistant">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            File Claim
+            onClick={e => { e.stopPropagation(); openEdit(w); }}
+            style={{ display:'flex', alignItems:'center', gap:'4px', background:'#1a1a1a', border:'1px solid #2a2a2a', borderRadius:'6px', color:'#666', fontSize:'10px', fontWeight:700, padding:'5px 9px', cursor:'pointer', transition:'all 0.15s', fontFamily:'Inter, sans-serif', letterSpacing:'0.04em', textTransform:'uppercase' }}
+            onMouseOver={e => { e.currentTarget.style.background='#242424'; e.currentTarget.style.color='#ccc'; e.currentTarget.style.borderColor='#3a3a3a'; }}
+            onMouseOut={e => { e.currentTarget.style.background='#1a1a1a'; e.currentTarget.style.color='#666'; e.currentTarget.style.borderColor='#2a2a2a'; }}>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit
           </button>
         </div>
       </div>
@@ -808,10 +815,6 @@ export default function AppPage() {
             <option value="purchase-desc">Newest Purchase</option>
             <option value="price-desc">Highest Value</option>
           </select>
-          <button className="btn-ghost" onClick={exportCSV} style={{ flexShrink:0 }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Export
-          </button>
           <div style={{ display:'flex', gap:'4px' }}>
             <button className={`view-btn ${currentView==='grid'?'active':''}`} onClick={() => setCurrentView('grid')} title="Grid view">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
@@ -1229,8 +1232,8 @@ export default function AppPage() {
             {/* Header */}
             <div style={{ padding:'18px 20px 14px', borderBottom:'1px solid #1a1a1a', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
               <div style={{ display:'flex', alignItems:'center', gap:'10px' }}>
-                <div style={{ width:32, height:32, borderRadius:'8px', background:'rgba(139,92,246,0.12)', border:'1px solid rgba(139,92,246,0.3)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                <div style={{ width:32, height:32, borderRadius:'8px', background:'rgba(255,255,255,0.08)', border:'1px solid rgba(255,255,255,0.3)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                 </div>
                 <div>
                   <div style={{ fontSize:'14px', fontWeight:800, letterSpacing:'-0.02em', color:'#f0f0f0' }}>Claim Assistant</div>
@@ -1318,6 +1321,103 @@ export default function AppPage() {
             {toast.type === 'error' && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>}
             {toast.type === 'info' && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>}
             {toast.message}
+          </div>
+        </div>
+      )}
+
+      {/* ── Floating Claim FAB ── */}
+      <button
+        type="button"
+        onClick={() => { setClaimPickerSearch(''); setShowClaimPicker(true); }}
+        style={{ position:'fixed', bottom:'28px', right:'28px', zIndex:200, display:'flex', alignItems:'center', gap:'9px', background:'#fff', border:'none', borderRadius:'14px', color:'#000', fontSize:'13px', fontWeight:700, padding:'13px 20px', cursor:'pointer', boxShadow:'0 4px 24px rgba(0,0,0,0.25), 0 1px 4px rgba(0,0,0,0.15)', transition:'all 0.2s', fontFamily:'Inter, sans-serif', letterSpacing:'0.01em' }}
+        onMouseOver={e => { e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.boxShadow='0 8px 32px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.2)'; }}
+        onMouseOut={e => { e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.boxShadow='0 4px 24px rgba(0,0,0,0.25), 0 1px 4px rgba(0,0,0,0.15)'; }}>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        File a Claim
+      </button>
+
+      {/* ── Claim Product Picker Modal ── */}
+      {showClaimPicker && (
+        <div className="modal-overlay" style={{ zIndex:250 }} onClick={e => { if (e.target === e.currentTarget) setShowClaimPicker(false); }}>
+          <div className="modal-box" style={{ maxWidth:'480px', width:'100%', padding:0, overflow:'hidden' }} onClick={e => e.stopPropagation()}>
+
+            {/* Header */}
+            <div style={{ padding:'20px 20px 16px', borderBottom:'1px solid #1a1a1a', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+              <div>
+                <div style={{ fontSize:'16px', fontWeight:800, letterSpacing:'-0.02em', color:'#f0f0f0' }}>File a Claim</div>
+                <div style={{ fontSize:'12px', color:'#444', marginTop:'3px' }}>Choose a product to get started</div>
+              </div>
+              <button onClick={() => setShowClaimPicker(false)} style={{ background:'none', border:'1px solid #1e1e1e', borderRadius:'8px', color:'#555', cursor:'pointer', padding:'7px', lineHeight:0 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+
+            {/* Search */}
+            <div style={{ padding:'12px 20px', borderBottom:'1px solid #111' }}>
+              <div style={{ position:'relative' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position:'absolute', left:'11px', top:'50%', transform:'translateY(-50%)', pointerEvents:'none' }}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input
+                  type="text"
+                  placeholder="Search warranties…"
+                  value={claimPickerSearch}
+                  onChange={e => setClaimPickerSearch(e.target.value)}
+                  autoFocus
+                  style={{ width:'100%', background:'#111', border:'1px solid #222', borderRadius:'8px', color:'#ddd', padding:'9px 12px 9px 34px', fontSize:'13px', outline:'none', fontFamily:'Inter, sans-serif', boxSizing:'border-box' }}
+                />
+              </div>
+            </div>
+
+            {/* Warranty list */}
+            <div style={{ maxHeight:'360px', overflowY:'auto' }}>
+              {(() => {
+                const q = claimPickerSearch.toLowerCase();
+                const list = warranties.filter(w =>
+                  !q ||
+                  w.productName?.toLowerCase().includes(q) ||
+                  w.brand?.toLowerCase().includes(q) ||
+                  w.category?.toLowerCase().includes(q)
+                );
+                if (list.length === 0) return (
+                  <div style={{ padding:'40px 20px', textAlign:'center', color:'#444', fontSize:'13px' }}>No warranties found.</div>
+                );
+                return list.map(w => {
+                  const st = getStatus(w);
+                  const sColor = statusColor[st];
+                  const days = daysRemaining(w.expiryDate);
+                  return (
+                    <button
+                      key={w.id}
+                      type="button"
+                      onClick={() => { setShowClaimPicker(false); openClaimModal(w); }}
+                      style={{ width:'100%', display:'flex', alignItems:'center', gap:'14px', padding:'14px 20px', background:'transparent', border:'none', borderBottom:'1px solid #111', cursor:'pointer', textAlign:'left', transition:'background 0.12s', fontFamily:'Inter, sans-serif' }}
+                      onMouseOver={e => e.currentTarget.style.background='#111'}
+                      onMouseOut={e => e.currentTarget.style.background='transparent'}>
+                      {/* Category icon box */}
+                      <div style={{ width:36, height:36, borderRadius:'9px', background:'#161616', border:'1px solid #222', display:'flex', alignItems:'center', justifyContent:'center', color:'#666', flexShrink:0 }}>
+                        <CategoryIcon cat={w.category} />
+                      </div>
+                      {/* Name + brand */}
+                      <div style={{ flex:1, minWidth:0 }}>
+                        <div style={{ fontSize:'13px', fontWeight:700, color:'#e0e0e0', letterSpacing:'-0.01em', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{w.productName}</div>
+                        {w.brand && <div style={{ fontSize:'11px', color:'#555', marginTop:'1px' }}>{w.brand}</div>}
+                      </div>
+                      {/* Status + days */}
+                      <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:'3px', flexShrink:0 }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:'4px', background:`${sColor}14`, border:`1px solid ${sColor}28`, borderRadius:'20px', padding:'3px 8px' }}>
+                          <div style={{ width:4, height:4, borderRadius:'50%', background:sColor }} />
+                          <span style={{ fontSize:'9px', fontWeight:700, color:sColor, textTransform:'uppercase', letterSpacing:'0.08em' }}>{st}</span>
+                        </div>
+                        <div style={{ fontSize:'10px', fontWeight:600, color:'#555' }}>
+                          {days < 0 ? `${Math.abs(days)}d ago` : `${days}d left`}
+                        </div>
+                      </div>
+                      {/* Arrow */}
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#333" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink:0 }}><polyline points="9 18 15 12 9 6"/></svg>
+                    </button>
+                  );
+                });
+              })()}
+            </div>
           </div>
         </div>
       )}
