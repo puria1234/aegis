@@ -169,7 +169,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div style={{ textAlign:'center', marginBottom:'28px' }}>
           <img src="/icon.png" width="48" height="48" alt="AEGIS" style={{ display: 'block', margin: '0 auto 20px auto' }} />
-          <div style={{ fontSize:'24px', fontWeight:900, letterSpacing:'-0.03em' }}>AEGIS</div>
+          <div style={{ fontSize:'24px', fontWeight:900, letterSpacing:'-0.03em' }}>Aegis</div>
           <div style={{ fontSize:'12px', color:'#444', fontWeight:600, letterSpacing:'0.1em', textTransform:'uppercase', marginTop:'6px' }}>Warranty Guardian</div>
         </div>
 
@@ -310,7 +310,7 @@ export default function LoginPage() {
         )}
         <div style={{ textAlign:'center', marginTop:'20px' }}>
           <a href="/" style={{ fontSize:'13px', color:'#444', textDecoration:'none', transition:'color 0.15s' }} onMouseOver={e=>e.target.style.color='#888'} onMouseOut={e=>e.target.style.color='#444'}>
-            ← Back to AEGIS
+            ← Back to Aegis
           </a>
         </div>
       </div>

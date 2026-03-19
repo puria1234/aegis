@@ -4,7 +4,7 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'], weight: ['300','400','500','600','700','800','900'] });
 
 export const metadata = {
-  title: 'AEGIS',
+  title: 'Aegis',
   description: 'Track and manage all your product warranties in one place.',
   icons: {
     icon: '/icon.png',
@@ -18,11 +18,12 @@ export const metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'AEGIS',
+    title: 'Aegis',
   },
   other: {
     'mobile-web-app-capable': 'yes',
     'theme-color': '#080808',
+    'google-site-verification': '9_JzOdfOk3oOJkfW-pZ7t_XjlRBABpYdauzpEX9h1i0',
   },
 };
 

@@ -575,7 +575,7 @@ export default function AppPage() {
       <nav style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 24px', height:'56px', borderBottom:'1px solid #141414', background:'rgba(8,8,8,0.95)', backdropFilter:'blur(20px)', position:'sticky', top:0, zIndex:100 }}>
         <div style={{ display:'flex', alignItems:'center', gap:'10px' }}>
           <img src="/icon.png" width="28" height="28" alt="AEGIS" style={{ borderRadius:'6px' }} />
-          <span style={{ fontWeight:900, fontSize:'16px', letterSpacing:'-0.03em' }}>AEGIS</span>
+          <span style={{ fontWeight:900, fontSize:'16px', letterSpacing:'-0.03em' }}>Aegis</span>
         </div>
         <div style={{ display:'flex', alignItems:'center', gap:'8px' }}>
           {/* Bell */}
@@ -644,7 +644,7 @@ export default function AppPage() {
         </div>
 
         {/* ── Stat cards ── */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:'12px', marginBottom:'24px' }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(140px, 1fr))', gap:'12px', marginBottom:'24px' }}>
           {[
             { key:'total', label:'Total', color:'#fff', icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg> },
             { key:'active', label:'Active', color:'#4ade80', icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> },
@@ -1005,7 +1005,7 @@ export default function AppPage() {
                 if ('Notification' in window) {
                    Notification.requestPermission().then(permission => {
                      if (permission === 'granted') {
-                       new Notification('AEGIS', { body: 'This is a test notification!' });
+                       new Notification('Aegis', { body: 'This is a test notification!' });
                      } else {
                        showToast('Notification permission denied.', 'error');
                      }
