@@ -136,6 +136,18 @@ export default function AppPage() {
   const [receiptPreview, setReceiptPreview] = useState(null);
   const [uploadingReceipt, setUploadingReceipt] = useState(false);
 
+  // ── AI receipt scan ────────────────────────────────────────────────────────
+  const [scanLoading, setScanLoading] = useState(false);
+  const [scanMonthlyCount, setScanMonthlyCount] = useState(0);
+  const SCAN_LIMIT = 5;
+
+  // ── AI claim assistant ─────────────────────────────────────────────────────
+  const [showClaimModal, setShowClaimModal] = useState(false);
+  const [claimWarranty, setClaimWarranty] = useState(null);
+  const [claimMessages, setClaimMessages] = useState([]);
+  const [claimInput, setClaimInput] = useState('');
+  const [claimLoading, setClaimLoading] = useState(false);
+
   // ── Refs ───────────────────────────────────────────────────────────────────
   const userMenuRef = useRef(null);
   const toastTimerRef = useRef(null);
@@ -144,10 +156,17 @@ export default function AppPage() {
   const warrantiesRef = useRef([]);
   const notifPrefsRef = useRef({ enabled:false, daysBefore:30 });
   const unsubWarrantiesRef = useRef(null);
+  const isSigningOutRef = useRef(false);
+  const claimScrollRef = useRef(null);
 
   useEffect(() => { statValuesRef.current = statValues; }, [statValues]);
   useEffect(() => { warrantiesRef.current = warranties; }, [warranties]);
   useEffect(() => { notifPrefsRef.current = notifPrefs; }, [notifPrefs]);
+  useEffect(() => {
+    if (claimScrollRef.current) {
+      claimScrollRef.current.scrollTop = claimScrollRef.current.scrollHeight;
+    }
+  }, [claimMessages, claimLoading]);
 
   // ── Toast ──────────────────────────────────────────────────────────────────
   const showToast = (message, type = 'success') => {
@@ -198,7 +217,9 @@ export default function AppPage() {
       },
       (err) => {
         console.error('Warranties listener error:', err);
-        showToast('Could not load warranties — check Firestore rules.', 'error');
+        if (!isSigningOutRef.current) {
+          showToast('Could not load warranties — check Firestore rules.', 'error');
+        }
       }
     );
   };
@@ -223,6 +244,9 @@ export default function AppPage() {
             setSelectedDaysBefore(data.notificationPrefs.daysBefore || 30);
           }
           setSettingsForm({ name: data.name || user.displayName || '', password: '' });
+          // Load this month's scan usage
+          const monthKey = new Date().toISOString().slice(0, 7);
+          setScanMonthlyCount(data.scanCounts?.[monthKey] || 0);
         } else {
           // Create profile if not exists
           const newProfile = {
@@ -260,6 +284,11 @@ export default function AppPage() {
 
   // ── Logout ─────────────────────────────────────────────────────────────────
   const logout = async () => {
+    isSigningOutRef.current = true;
+    if (unsubWarrantiesRef.current) {
+      unsubWarrantiesRef.current();
+      unsubWarrantiesRef.current = null;
+    }
     await signOut(auth);
     router.push('/login');
   };
@@ -281,6 +310,97 @@ export default function AppPage() {
     setReceiptFile(null);
     setReceiptPreview(null);
     setFormData(p => ({ ...p, receiptUrl: '', receiptType: '' }));
+  };
+
+  // ── AI receipt scan ────────────────────────────────────────────────────────
+  const scanReceiptWithAI = async () => {
+    if (!receiptFile) return;
+    if (scanMonthlyCount >= SCAN_LIMIT) {
+      setFormError(`Monthly scan limit reached (${SCAN_LIMIT} scans/month). Resets next month.`);
+      return;
+    }
+    setScanLoading(true);
+    setFormError('');
+    try {
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(receiptFile);
+      });
+      const res = await fetch('/api/scan-receipt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: base64, mimeType: receiptFile.type }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Scan failed');
+      }
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || 'Scan failed');
+      const d = json.data;
+      // Auto-fill only empty fields
+      setFormData(prev => ({
+        ...prev,
+        productName: prev.productName || d.productName || '',
+        brand:       prev.brand       || d.brand       || '',
+        purchaseDate:prev.purchaseDate|| d.purchaseDate || '',
+        price:       prev.price       || d.price        || '',
+        retailer:    prev.retailer    || d.retailer     || '',
+        serial:      prev.serial      || d.serial       || '',
+        category:    prev.category    || d.category     || '',
+      }));
+      // Save updated scan count to Firestore
+      const monthKey = new Date().toISOString().slice(0, 7);
+      const newCount = scanMonthlyCount + 1;
+      setScanMonthlyCount(newCount);
+      await setDoc(doc(db, 'users', currentUser.uid), {
+        scanCounts: { [monthKey]: newCount }
+      }, { merge: true });
+      showToast('Receipt scanned. Fields auto-filled.', 'success');
+    } catch (err) {
+      setFormError(`Scan failed: ${err.message}`);
+    } finally {
+      setScanLoading(false);
+    }
+  };
+
+  // ── AI claim assistant ─────────────────────────────────────────────────────
+  const openClaimModal = (w) => {
+    setClaimWarranty(w);
+    setClaimMessages([{
+      role: 'assistant',
+      content: `I'm here to help you file a warranty claim for your ${w.productName}${w.brand ? ` by ${w.brand}` : ''}.\n\nWhat issue are you experiencing with this product?`,
+    }]);
+    setClaimInput('');
+    setShowClaimModal(true);
+  };
+
+  const sendClaimMessage = async () => {
+    if (!claimInput.trim() || claimLoading || !claimWarranty) return;
+    const userMsg = { role: 'user', content: claimInput.trim() };
+    const updated = [...claimMessages, userMsg];
+    setClaimMessages(updated);
+    setClaimInput('');
+    setClaimLoading(true);
+    try {
+      const res = await fetch('/api/claim-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: updated,
+          warrantyContext: { ...claimWarranty, status: getStatus(claimWarranty) },
+        }),
+      });
+      if (!res.ok) throw new Error('Request failed');
+      const json = await res.json();
+      setClaimMessages(prev => [...prev, { role: 'assistant', content: json.message }]);
+    } catch {
+      setClaimMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I ran into an error. Please try again.' }]);
+    } finally {
+      setClaimLoading(false);
+    }
   };
 
   // ── Save warranty ──────────────────────────────────────────────────────────
@@ -528,11 +648,21 @@ export default function AppPage() {
             <div className="progress-bar"><div className="progress-fill" style={{ width:`${progressPct}%`, background: status==='expired'?'#ef4444':status==='expiring'?'#f59e0b':'#4ade80' }}></div></div>
           </div>
         )}
-        {w.price && (
-          <div style={{ marginTop:'10px', paddingTop:'10px', borderTop:'1px solid #161616', fontSize:'12px', color:'#555' }}>
-            <span style={{ color:'#333' }}>Value:</span> <span style={{ color:'#888', fontWeight:600 }}>{formatPrice(w.price)}</span>
+        <div style={{ marginTop:'10px', paddingTop:'10px', borderTop:'1px solid #161616', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+          <div style={{ fontSize:'12px', color:'#555' }}>
+            {w.price ? <><span style={{ color:'#333' }}>Value:</span> <span style={{ color:'#888', fontWeight:600 }}>{formatPrice(w.price)}</span></> : <span style={{ color:'#2a2a2a' }}>—</span>}
           </div>
-        )}
+          <button
+            type="button"
+            onClick={e => { e.stopPropagation(); openClaimModal(w); }}
+            style={{ display:'flex', alignItems:'center', gap:'5px', background:'#ffffff', border:'1px solid #ffffff', borderRadius:'6px', color:'#000000', fontSize:'10px', fontWeight:700, padding:'4px 8px', cursor:'pointer', transition:'all 0.15s', fontFamily:'Inter, sans-serif', letterSpacing:'0.04em' }}
+            onMouseOver={e => { e.currentTarget.style.background='#e5e7eb'; e.currentTarget.style.borderColor='#e5e7eb'; }}
+            onMouseOut={e => { e.currentTarget.style.background='#ffffff'; e.currentTarget.style.borderColor='#ffffff'; }}
+            title="Open AI claim assistant">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            File Claim
+          </button>
+        </div>
       </div>
     );
   };
@@ -575,7 +705,8 @@ export default function AppPage() {
       <nav style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 24px', height:'56px', borderBottom:'1px solid #141414', background:'rgba(8,8,8,0.95)', backdropFilter:'blur(20px)', position:'sticky', top:0, zIndex:100 }}>
         <div style={{ display:'flex', alignItems:'center', gap:'10px' }}>
           <img src="/icon.png" width="28" height="28" alt="AEGIS" style={{ borderRadius:'6px' }} />
-          <span style={{ fontWeight:900, fontSize:'16px', letterSpacing:'-0.03em' }}>Aegis</span>
+          <span style={{ fontWeight:900, fontSize:'16px', letterSpacing:'-0.03em' }}>AEGIS</span>
+          <span style={{ fontSize:'12px', fontWeight:500, color:'#444', letterSpacing:'0.02em', marginLeft:'2px' }}>Warranty Tracker</span>
         </div>
         <div style={{ display:'flex', alignItems:'center', gap:'8px' }}>
           {/* Bell */}
@@ -794,7 +925,12 @@ export default function AppPage() {
                   <textarea className="input-field" rows={3} placeholder="Any additional notes" value={formData.notes} onChange={e => setFormData(p => ({...p, notes:e.target.value}))} style={{ resize:'vertical' }} />
                 </div>
                 <div style={{ gridColumn:'1/-1' }}>
-                  <label className="label">Receipt</label>
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'6px' }}>
+                    <label className="label" style={{ margin:0 }}>Receipt</label>
+                    <span style={{ fontSize:'10px', color: scanMonthlyCount >= SCAN_LIMIT ? '#ef4444' : '#444', fontWeight:500 }}>
+                      {scanMonthlyCount}/{SCAN_LIMIT} AI scans this month
+                    </span>
+                  </div>
                   {(receiptFile || formData.receiptUrl) ? (
                     <div style={{ display:'flex', alignItems:'center', gap:'12px', background:'#0d0d0d', border:'1px solid #2a2a2a', borderRadius:'10px', padding:'12px 14px' }}>
                       {(receiptPreview) ? (
@@ -811,6 +947,30 @@ export default function AppPage() {
                         {receiptFile && <div style={{ fontSize:'11px', color:'#555', marginTop:'2px' }}>{(receiptFile.size/1024).toFixed(0)} KB</div>}
                         {!receiptFile && formData.receiptUrl && <div style={{ fontSize:'11px', color:'#555', marginTop:'2px' }}>Click × to remove</div>}
                       </div>
+                      {receiptFile && (
+                        <button type="button" onClick={scanReceiptWithAI} disabled={scanLoading || scanMonthlyCount >= SCAN_LIMIT}
+                          style={{ display:'flex', alignItems:'center', gap:'6px', background: scanMonthlyCount >= SCAN_LIMIT ? '#111' : '#ffffff', border:`1px solid ${scanMonthlyCount >= SCAN_LIMIT ? '#222' : '#ffffff'}`, borderRadius:'7px', color: scanMonthlyCount >= SCAN_LIMIT ? '#444' : '#000000', fontSize:'11px', fontWeight:700, cursor: scanLoading || scanMonthlyCount >= SCAN_LIMIT ? 'not-allowed' : 'pointer', padding:'6px 10px', flexShrink:0, transition:'all 0.15s', fontFamily:'Inter, sans-serif' }}
+                          onMouseOver={e => {
+                            if (!(scanLoading || scanMonthlyCount >= SCAN_LIMIT)) {
+                              e.currentTarget.style.background = '#e5e7eb';
+                              e.currentTarget.style.borderColor = '#e5e7eb';
+                            }
+                          }}
+                          onMouseOut={e => {
+                            if (!(scanLoading || scanMonthlyCount >= SCAN_LIMIT)) {
+                              e.currentTarget.style.background = '#ffffff';
+                              e.currentTarget.style.borderColor = '#ffffff';
+                            }
+                          }}
+                          title={scanMonthlyCount >= SCAN_LIMIT ? 'Monthly limit reached' : 'Use AI to extract fields from this receipt'}>
+                          {scanLoading ? (
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ animation:'spin 0.7s linear infinite' }}><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                          ) : (
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a10 10 0 0 1 10 10"/><path d="M12 6v2m0 8v2M6 12H4m16 0h-2"/><circle cx="12" cy="12" r="3"/></svg>
+                          )}
+                          {scanLoading ? 'Scanning.' : 'Scan with AI'}
+                        </button>
+                      )}
                       <button type="button" onClick={clearReceipt} style={{ background:'none', border:'1px solid #2a2a2a', borderRadius:'6px', color:'#555', cursor:'pointer', padding:'6px', lineHeight:0, flexShrink:0, transition:'all 0.15s' }} onMouseOver={e=>e.currentTarget.style.borderColor='#555'} onMouseOut={e=>e.currentTarget.style.borderColor='#2a2a2a'}>
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                       </button>
@@ -1061,6 +1221,95 @@ export default function AppPage() {
         </div>
       )}
 
+      {/* ── AI Claim Assistant Modal ── */}
+      {showClaimModal && claimWarranty && (
+        <div className="modal-overlay" style={{ zIndex:300 }} onClick={e => { if (e.target === e.currentTarget) setShowClaimModal(false); }}>
+          <div className="modal-box" style={{ maxWidth:'560px', width:'100%', height:'580px', display:'flex', flexDirection:'column', padding:0, overflow:'hidden' }} onClick={e => e.stopPropagation()}>
+
+            {/* Header */}
+            <div style={{ padding:'18px 20px 14px', borderBottom:'1px solid #1a1a1a', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:'10px' }}>
+                <div style={{ width:32, height:32, borderRadius:'8px', background:'rgba(139,92,246,0.12)', border:'1px solid rgba(139,92,246,0.3)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                </div>
+                <div>
+                  <div style={{ fontSize:'14px', fontWeight:800, letterSpacing:'-0.02em', color:'#f0f0f0' }}>Claim Assistant</div>
+                  <div style={{ fontSize:'11px', color:'#444', marginTop:'1px' }}>{claimWarranty.productName}</div>
+                </div>
+              </div>
+              <button onClick={() => setShowClaimModal(false)} style={{ background:'none', border:'1px solid #1e1e1e', borderRadius:'8px', color:'#555', cursor:'pointer', padding:'7px', lineHeight:0, transition:'all 0.15s' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+
+            {/* Warranty summary bar */}
+            <div style={{ padding:'8px 20px', borderBottom:'1px solid #111', background:'#0a0a0a', display:'flex', gap:'16px', flexShrink:0, flexWrap:'wrap' }}>
+              {[
+                ['Status', getStatus(claimWarranty).toUpperCase()],
+                claimWarranty.purchaseDate && ['Purchased', formatDate(claimWarranty.purchaseDate)],
+                ['Expires', formatDate(claimWarranty.expiryDate)],
+                claimWarranty.retailer && ['Retailer', claimWarranty.retailer],
+              ].filter(Boolean).map(([k,v]) => (
+                <div key={k} style={{ fontSize:'10px' }}>
+                  <span style={{ color:'#444', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>{k}: </span>
+                  <span style={{ color:'#888', fontWeight:600 }}>{v}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Messages */}
+            <div ref={claimScrollRef} style={{ flex:1, overflowY:'auto', padding:'16px 20px', display:'flex', flexDirection:'column', gap:'12px' }}>
+              {claimMessages.map((msg, i) => (
+                <div key={i} style={{ display:'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
+                  <div style={{
+                    maxWidth:'85%',
+                    background: msg.role === 'user' ? '#fff' : '#111',
+                    border: msg.role === 'user' ? 'none' : '1px solid #1e1e1e',
+                    color: msg.role === 'user' ? '#000' : '#ccc',
+                    borderRadius: msg.role === 'user' ? '12px 12px 3px 12px' : '12px 12px 12px 3px',
+                    padding:'10px 14px',
+                    fontSize:'13px',
+                    lineHeight:'1.55',
+                    whiteSpace:'pre-wrap',
+                  }}>
+                    {msg.content}
+                  </div>
+                </div>
+              ))}
+              {claimLoading && (
+                <div style={{ display:'flex', justifyContent:'flex-start' }}>
+                  <div style={{ background:'#111', border:'1px solid #1e1e1e', borderRadius:'12px 12px 12px 3px', padding:'10px 16px', display:'flex', gap:'4px', alignItems:'center' }}>
+                    {[0,1,2].map(i => (
+                      <div key={i} style={{ width:5, height:5, borderRadius:'50%', background:'#555', animation:`dotBounce 1.2s ease-in-out ${i*0.2}s infinite` }} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Input row */}
+            <div style={{ padding:'12px 16px', borderTop:'1px solid #1a1a1a', display:'flex', gap:'8px', alignItems:'flex-end', flexShrink:0, background:'#0d0d0d' }}>
+              <textarea
+                value={claimInput}
+                onChange={e => setClaimInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendClaimMessage(); } }}
+                placeholder="Describe your issue or ask for a claim letter…"
+                rows={2}
+                style={{ flex:1, background:'#141414', border:'1px solid #242424', borderRadius:'10px', color:'#fff', padding:'10px 14px', fontSize:'13px', outline:'none', resize:'none', fontFamily:'Inter, sans-serif', lineHeight:'1.5', transition:'border-color 0.15s' }}
+                onFocus={e => e.target.style.borderColor='#555'}
+                onBlur={e => e.target.style.borderColor='#242424'}
+              />
+              <button
+                onClick={sendClaimMessage}
+                disabled={claimLoading || !claimInput.trim()}
+                style={{ background:'#fff', color:'#000', border:'none', borderRadius:'10px', padding:'10px 16px', fontSize:'13px', fontWeight:800, cursor: claimLoading || !claimInput.trim() ? 'not-allowed' : 'pointer', opacity: claimLoading || !claimInput.trim() ? 0.4 : 1, transition:'all 0.15s', fontFamily:'Inter, sans-serif', height:'46px', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Toast ── */}
       {toast && (
         <div className={`notif-toast notif-${toast.type}`}>
@@ -1075,6 +1324,7 @@ export default function AppPage() {
 
       <style jsx>{`
         @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes dotBounce { 0%,80%,100% { transform: scale(0.6); opacity:0.4; } 40% { transform: scale(1); opacity:1; } }
       `}</style>
     </div>
   );

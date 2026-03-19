@@ -219,7 +219,7 @@ export default function LoginPage() {
             </div>
             <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'20px' }}>
               <input type="checkbox" id="rememberMe" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)} style={{ appearance:'none', width:'16px', height:'16px', border:'1px solid #333', borderRadius:'4px', background:rememberMe ? '#fff' : 'transparent', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', position:'relative' }} />
-              <style dangerouslySetContent={{ __html: `
+              <style dangerouslySetInnerHTML={{ __html: `
                 #rememberMe:checked::after { content: ''; position: absolute; width: 4px; height: 8px; border: solid #000; border-width: 0 2px 2px 0; transform: rotate(45deg); margin-top: -2px; }
               ` }} />
               <label htmlFor="rememberMe" style={{ fontSize:'12px', color:'#888', cursor:'pointer', userSelect:'none' }}>Remember me</label>
