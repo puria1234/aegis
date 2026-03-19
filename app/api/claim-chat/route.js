@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 
+const AI_GATEWAY_URL = process.env.AI_GATEWAY_URL || 'https://ai-gateway.vercel.sh/v1';
+const CLAIM_MODEL = process.env.MISTRAL_CHAT_MODEL || 'mistral/devstral-2';
+
 function stripMarkdown(text) {
   return text
     .replace(/\*\*\*(.+?)\*\*\*/gs, '$1')   // bold+italic
@@ -56,32 +59,43 @@ INSTRUCTIONS:
 - Write in plain, clear prose. Do not use markdown, asterisks, pound signs, backticks, or any special formatting characters. Use plain sentences and paragraphs only.
 - Keep responses under 250 words unless drafting a letter.`;
 
-    // Use mistral-small-latest (reliable, fast); devstral is code-focused and not suited here
-    const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+    const apiKey = process.env.AI_GATEWAY_API_KEY;
+    if (!apiKey) {
+      throw new Error('Missing AI_GATEWAY_API_KEY');
+    }
+
+    const response = await fetch(`${AI_GATEWAY_URL}/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.MISTRAL_API_KEY}`,
+        'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'devstral-2512',
+        model: CLAIM_MODEL,
         messages: [
           { role: 'system', content: systemPrompt },
           ...messages,
         ],
         max_tokens: 1200,
         temperature: 0.6,
+        stream: false,
       }),
     });
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error('Mistral claim-chat error:', response.status, errText);
-      return NextResponse.json({ error: 'AI service unavailable — try again.' }, { status: 502 });
+      console.error('AI Gateway claim-chat error:', response.status, errText);
+      if (response.status === 429) {
+        return NextResponse.json({ error: 'Rate limit reached — wait a few seconds and try again.' }, { status: 429 });
+      }
+      return NextResponse.json({ error: 'AI service unavailable — check your AI Gateway key and model access.' }, { status: 502 });
     }
 
     const data = await response.json();
-    const raw = data.choices?.[0]?.message?.content || '';
+    const content = data.choices?.[0]?.message?.content;
+    const raw = Array.isArray(content)
+      ? content.map((part) => (typeof part === 'string' ? part : part?.text || '')).join('')
+      : (typeof content === 'string' ? content : '');
     const clean = stripMarkdown(raw);
 
     return NextResponse.json({ success: true, message: clean });
