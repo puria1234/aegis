@@ -7,6 +7,7 @@ import { auth } from '../lib/firebase';
 export default function LandingPage() {
   const navRef = useRef(null);
   const [user, setUser] = useState(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (currentUser) => {
@@ -48,20 +49,65 @@ export default function LandingPage() {
     <div>
 
       {/* NAV */}
-      <nav id="navbar" ref={navRef}>
-        <a href="/" className="nav-logo">
-          <img src="/favicon.png" width="32" height="32" alt="AEGIS" />
-          <span className="nav-logo-text">AEGIS</span>
+      <nav id="navbar" ref={navRef} style={{ position: 'fixed', width: '100%', zIndex: 100, display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '68px', padding: '0 5vmin', background: 'rgba(8,8,8,0.85)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.04)', transition: 'border-color 0.3s ease' }}>
+        <a href="/" className="nav-logo" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
+          <img src="/favicon.png" width="28" height="28" alt="AEGIS" />
+          <span className="nav-logo-text" style={{ fontSize: '15px', fontWeight: '800', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#fff' }}>AEGIS</span>
         </a>
-        <div className="nav-links">
-          <a href="#features" className="nav-link">Features</a>
-          <a href="#how-it-works" className="nav-link">How It Works</a>
-          <a href={user ? "/app" : "/login"} className="btn-cta" style={{ padding:'10px 24px', fontSize:'12px', borderRadius:'8px' }}>
+        
+        {/* Desktop Links */}
+        <div className="nav-links hide-sm" style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
+          <a href="#features" className="nav-link" style={{ fontSize: '11px', fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#888', textDecoration: 'none', transition: 'color 0.2s' }} onMouseOver={e => e.target.style.color = '#fff'} onMouseOut={e => e.target.style.color = '#888'}>Features</a>
+          <a href="#how-it-works" className="nav-link" style={{ fontSize: '11px', fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#888', textDecoration: 'none', transition: 'color 0.2s' }} onMouseOver={e => e.target.style.color = '#fff'} onMouseOut={e => e.target.style.color = '#888'}>How It Works</a>
+          <a href={user ? "/app" : "/login"} className="btn-cta" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#fff', color: '#000', padding: '10px 20px', borderRadius: '6px', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em', textDecoration: 'none', transition: 'all 0.2s' }}>
             {user ? "Go to Dashboard" : "Open App"}
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </a>
         </div>
+
+        {/* Mobile Hamburger Toggle */}
+        <button 
+          className="mobile-menu-btn hide-desktop" 
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        >
+          {mobileMenuOpen ? (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          ) : (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          )}
+        </button>
       </nav>
+
+      {/* Mobile Menu Overlay */}
+      <div 
+        className="mobile-menu-overlay hide-desktop"
+        style={{
+          position: 'fixed',
+          top: '68px',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(8,8,8,0.98)',
+          backdropFilter: 'blur(24px)',
+          zIndex: 99,
+          display: mobileMenuOpen ? 'flex' : 'none',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '32px',
+          opacity: mobileMenuOpen ? 1 : 0,
+          transition: 'opacity 0.3s ease',
+          visibility: mobileMenuOpen ? 'visible' : 'hidden'
+        }}
+      >
+        <a href="#features" onClick={() => setMobileMenuOpen(false)} style={{ fontSize: '20px', fontWeight: '700', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#fff', textDecoration: 'none' }}>Features</a>
+        <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)} style={{ fontSize: '20px', fontWeight: '700', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#fff', textDecoration: 'none' }}>How It Works</a>
+        <a href={user ? "/app" : "/login"} onClick={() => setMobileMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#fff', color: '#000', padding: '14px 28px', borderRadius: '8px', fontSize: '14px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em', textDecoration: 'none', marginTop: '16px' }}>
+          {user ? "Go to Dashboard" : "Open App"}
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
 
       {/* HERO */}
       <div className="hero">
@@ -185,7 +231,7 @@ export default function LandingPage() {
 
       {/* STAT BAND */}
       <div className="stat-band">
-        <div style={{ maxWidth:'1280px', margin:'0 auto', display:'grid', gridTemplateColumns:'repeat(3,1fr)' }}>
+        <div className="responsive-grid-3" style={{ maxWidth:'1280px', margin:'0 auto', display:'grid', gridTemplateColumns:'repeat(3,1fr)' }}>
           <div className="stat-item reveal">
             <div className="stat-number">∞</div>
             <div className="stat-label">Warranties tracked</div>
@@ -208,7 +254,7 @@ export default function LandingPage() {
           <h2 className="headline-lg" style={{ maxWidth:'620px' }}>Built for every<br/>product you own.</h2>
         </div>
 
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))', gap:'16px' }}>
+        <div className="responsive-features-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))', gap:'16px' }}>
 
           <div className="feature-card reveal">
             <div className="feature-icon">
@@ -292,7 +338,7 @@ export default function LandingPage() {
           <h2 className="headline-lg">Up and running<br/>in three steps.</h2>
         </div>
 
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'0', position:'relative' }} className="reveal">
+        <div className="responsive-grid-3 reveal" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'0', position:'relative' }}>
 
           {/* Connecting line */}
           <div className="hide-sm" style={{ position:'absolute', top:'36px', left:'calc(16.66% + 20px)', right:'calc(16.66% + 20px)', height:'1px', background:'linear-gradient(to right, #222 0%, #444 50%, #222 100%)', zIndex:'0' }}></div>
@@ -341,14 +387,14 @@ export default function LandingPage() {
 
       {/* CATEGORIES */}
       <section>
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'80px', alignItems:'center' }} className="reveal">
+        <div className="responsive-grid-2 reveal" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'80px', alignItems:'center' }}>
           <div>
             <div className="eyebrow" style={{ marginBottom:'16px' }}>Everything, Organized</div>
             <h2 className="headline-lg" style={{ marginBottom:'24px' }}>Nine categories.<br/>One dashboard.</h2>
             <p className="body-text" style={{ marginBottom:'36px' }}>From AirPods to automobiles, AEGIS handles every type of purchase. Tap any category to instantly filter your view.</p>
             <a href="/login" className="btn-cta">Open AEGIS</a>
           </div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'12px' }}>
+          <div className="responsive-grid-cat" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'12px' }}>
 
             <div className="feature-card" style={{ padding:'20px', textAlign:'center', cursor:'default' }}>
               <div style={{ display:'flex', justifyContent:'center', marginBottom:'10px' }}>
