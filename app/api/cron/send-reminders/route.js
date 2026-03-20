@@ -230,6 +230,9 @@ function buildReminderEmail({ name, daysBefore, warranties, baseUrl, logoSrc }) 
 </html>`;
 }
 
+// ── Plan limits ───────────────────────────────────────────────────────────────
+const REMINDER_LIMITS = { free: 5, pro: 10 };
+
 // ── Main handler ──────────────────────────────────────────────────────────────
 export async function GET(request) {
   // 1. Verify cron secret
@@ -245,6 +248,7 @@ export async function GET(request) {
   const baseUrl  = APP_BASE_URL ? APP_BASE_URL.replace(/\/$/, '') : '';
   const logoSrc  = baseUrl ? `${baseUrl}/favicon.png` : '';
   const today    = new Date(); today.setHours(0,0,0,0);
+  const monthKey = today.toISOString().slice(0, 7);
 
   const results = { sent: 0, skipped: 0, errors: [] };
 
@@ -271,13 +275,19 @@ export async function GET(request) {
       if (!email) { results.skipped++; continue; }
 
       try {
-        // 4. Fetch this user's warranties
+        // 4. Check monthly reminder limit for this user's plan
+        const plan = profile.plan || 'free';
+        const reminderLimit = REMINDER_LIMITS[plan] ?? REMINDER_LIMITS.free;
+        const reminderCount = profile.reminderCounts?.[monthKey] || 0;
+        if (reminderCount >= reminderLimit) { results.skipped++; continue; }
+
+        // 5. Fetch this user's warranties
         const warrantiesSnap = await adminDb
           .collection('warranties')
           .where('userId', '==', uid)
           .get();
 
-        // 5. Filter to ones expiring within their window (and not already expired)
+        // 6. Filter to ones expiring within their window (and not already expired)
         const expiring = warrantiesSnap.docs
           .map(d => ({ id: d.id, ...d.data() }))
           .map(w => ({ ...w, daysRemaining: daysRemaining(w.expiryDate) }))
@@ -285,10 +295,10 @@ export async function GET(request) {
           .sort((a, b) => a.daysRemaining - b.daysRemaining)
           .slice(0, 10);
 
-        // 6. Skip if nothing is expiring
+        // 7. Skip if nothing is expiring
         if (expiring.length === 0) { results.skipped++; continue; }
 
-        // 7. Build and send the email
+        // 8. Build and send the email
         const html = buildReminderEmail({ name, daysBefore, warranties: expiring, baseUrl, logoSrc });
         const count = expiring.length;
         const subject = `Aegis — ${count} warrant${count === 1 ? 'y' : 'ies'} expiring within ${daysBefore} days`;
@@ -296,9 +306,10 @@ export async function GET(request) {
         await sendEmail({ to: email, subject, html });
         results.sent++;
 
-        // 8. Record last reminder sent timestamp
+        // 9. Record last reminder sent + increment monthly count
         await adminDb.collection('users').doc(uid).update({
           lastReminderSentAt: FieldValue.serverTimestamp(),
+          [`reminderCounts.${monthKey}`]: FieldValue.increment(1),
         });
 
       } catch (userErr) {
@@ -307,7 +318,7 @@ export async function GET(request) {
     }
 
     return NextResponse.json({
-      message: `Done. Sent: ${results.sent}, Skipped (nothing expiring): ${results.skipped}, Errors: ${results.errors.length}`,
+      message: `Done. Sent: ${results.sent}, Skipped: ${results.skipped}, Errors: ${results.errors.length}`,
       ...results,
     });
 

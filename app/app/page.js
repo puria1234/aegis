@@ -143,6 +143,8 @@ export default function AppPage() {
   const SCAN_LIMIT = 5;
 
   // ── AI claim assistant ─────────────────────────────────────────────────────
+  const [claimMonthlyCount, setClaimMonthlyCount] = useState(0);
+  const CLAIM_LIMIT = 5;
   const [showClaimPicker, setShowClaimPicker] = useState(false);
   const [claimPickerSearch, setClaimPickerSearch] = useState('');
   const [showClaimModal, setShowClaimModal] = useState(false);
@@ -270,9 +272,10 @@ export default function AppPage() {
             setSelectedDaysBefore(normalizedPrefs.daysBefore);
           }
           setSettingsForm({ name: data.name || user.displayName || '', password: '' });
-          // Load this month's scan usage
+          // Load this month's usage
           const monthKey = new Date().toISOString().slice(0, 7);
           setScanMonthlyCount(data.scanCounts?.[monthKey] || 0);
+          setClaimMonthlyCount(data.claimCounts?.[monthKey] || 0);
         } else {
           // Create profile if not exists
           const newProfile = {
@@ -405,6 +408,7 @@ export default function AppPage() {
 
   const sendClaimMessage = async () => {
     if (!claimInput.trim() || claimLoading || !claimWarranty) return;
+    if (claimMonthlyCount >= CLAIM_LIMIT) return;
     const userMsg = { role: 'user', content: claimInput.trim() };
     const updated = [...claimMessages, userMsg];
     setClaimMessages(updated);
@@ -422,6 +426,13 @@ export default function AppPage() {
       if (!res.ok) throw new Error('Request failed');
       const json = await res.json();
       setClaimMessages(prev => [...prev, { role: 'assistant', content: json.message }]);
+      // Save updated claim count to Firestore
+      const monthKey = new Date().toISOString().slice(0, 7);
+      const newCount = claimMonthlyCount + 1;
+      setClaimMonthlyCount(newCount);
+      await setDoc(doc(db, 'users', currentUser.uid), {
+        claimCounts: { [monthKey]: newCount }
+      }, { merge: true });
     } catch {
       setClaimMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I ran into an error. Please try again.' }]);
     } finally {
@@ -810,6 +821,40 @@ export default function AppPage() {
                 <div style={{ padding:'8px 12px 12px', borderBottom:'1px solid #1a1a1a', marginBottom:'8px' }}>
                   <div style={{ fontSize:'13px', fontWeight:700, color:'#e0e0e0' }}>{displayName}</div>
                   <div style={{ fontSize:'11px', color:'#444', marginTop:'2px' }}>{displayEmail}</div>
+                  {/* AI usage */}
+                  <div style={{ marginTop:'10px', background:'#161616', border:'1px solid #1e1e1e', borderRadius:'8px', padding:'8px 10px', display:'flex', flexDirection:'column', gap:'8px' }}>
+                    {/* Scans row */}
+                    <div>
+                      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'5px' }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:'5px' }}>
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                          <span style={{ fontSize:'10px', fontWeight:700, color:'#555', textTransform:'uppercase', letterSpacing:'0.08em' }}>AI Scans</span>
+                        </div>
+                        <span style={{ fontSize:'11px', fontWeight:700, color: scanMonthlyCount >= SCAN_LIMIT ? '#ef4444' : scanMonthlyCount >= SCAN_LIMIT - 1 ? '#f59e0b' : '#4ade80' }}>
+                          {scanMonthlyCount}/{SCAN_LIMIT}
+                        </span>
+                      </div>
+                      <div style={{ height:'3px', borderRadius:'2px', background:'#2a2a2a', overflow:'hidden' }}>
+                        <div style={{ height:'100%', borderRadius:'2px', width:`${Math.min((scanMonthlyCount / SCAN_LIMIT) * 100, 100)}%`, background: scanMonthlyCount >= SCAN_LIMIT ? '#ef4444' : scanMonthlyCount >= SCAN_LIMIT - 1 ? '#f59e0b' : '#4ade80', transition:'width 0.3s ease' }} />
+                      </div>
+                    </div>
+                    {/* Claim chats row */}
+                    <div>
+                      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'5px' }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:'5px' }}>
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                          <span style={{ fontSize:'10px', fontWeight:700, color:'#555', textTransform:'uppercase', letterSpacing:'0.08em' }}>Claim Chats</span>
+                        </div>
+                        <span style={{ fontSize:'11px', fontWeight:700, color: claimMonthlyCount >= CLAIM_LIMIT ? '#ef4444' : claimMonthlyCount >= CLAIM_LIMIT - 1 ? '#f59e0b' : '#4ade80' }}>
+                          {claimMonthlyCount}/{CLAIM_LIMIT}
+                        </span>
+                      </div>
+                      <div style={{ height:'3px', borderRadius:'2px', background:'#2a2a2a', overflow:'hidden' }}>
+                        <div style={{ height:'100%', borderRadius:'2px', width:`${Math.min((claimMonthlyCount / CLAIM_LIMIT) * 100, 100)}%`, background: claimMonthlyCount >= CLAIM_LIMIT ? '#ef4444' : claimMonthlyCount >= CLAIM_LIMIT - 1 ? '#f59e0b' : '#4ade80', transition:'width 0.3s ease' }} />
+                      </div>
+                    </div>
+                    <div style={{ fontSize:'10px', color:'#333' }}>Resets on the 1st of each month</div>
+                  </div>
                 </div>
                 <button onClick={() => { setShowNotifModal(true); setUserMenuOpen(false); }} style={{ display:'flex', alignItems:'center', gap:'10px', width:'100%', padding:'9px 12px', background:'none', border:'none', color:'#888', fontSize:'13px', cursor:'pointer', borderRadius:'7px', transition:'all 0.15s', textAlign:'left' }} onMouseOver={e=>e.currentTarget.style.background='#161616'} onMouseOut={e=>e.currentTarget.style.background='none'}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
@@ -1003,11 +1048,8 @@ export default function AppPage() {
                   <textarea className="input-field" rows={3} placeholder="Any additional notes" value={formData.notes} onChange={e => setFormData(p => ({...p, notes:e.target.value}))} style={{ resize:'vertical' }} />
                 </div>
                 <div style={{ gridColumn:'1/-1' }}>
-                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'6px' }}>
+                  <div style={{ marginBottom:'6px' }}>
                     <label className="label" style={{ margin:0 }}>Receipt</label>
-                    <span style={{ fontSize:'10px', color: scanMonthlyCount >= SCAN_LIMIT ? '#ef4444' : '#444', fontWeight:500 }}>
-                      {scanMonthlyCount}/{SCAN_LIMIT} AI scans this month
-                    </span>
                   </div>
                   {(receiptFile || formData.receiptUrl) ? (
                     <div style={{ display:'flex', alignItems:'center', gap:'12px', background:'#0d0d0d', border:'1px solid #2a2a2a', borderRadius:'10px', padding:'12px 14px' }}>
@@ -1359,24 +1401,36 @@ export default function AppPage() {
             </div>
 
             {/* Input row */}
-            <div style={{ padding:'12px 16px', borderTop:'1px solid #1a1a1a', display:'flex', gap:'8px', alignItems:'flex-end', flexShrink:0, background:'#0d0d0d' }}>
-              <textarea
-                value={claimInput}
-                onChange={e => setClaimInput(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendClaimMessage(); } }}
-                placeholder="Describe your issue or ask for a claim letter…"
-                rows={2}
-                style={{ flex:1, background:'#141414', border:'1px solid #242424', borderRadius:'10px', color:'#fff', padding:'10px 14px', fontSize:'13px', outline:'none', resize:'none', fontFamily:'Inter, sans-serif', lineHeight:'1.5', transition:'border-color 0.15s' }}
-                onFocus={e => e.target.style.borderColor='#555'}
-                onBlur={e => e.target.style.borderColor='#242424'}
-              />
-              <button
-                onClick={sendClaimMessage}
-                disabled={claimLoading || !claimInput.trim()}
-                style={{ background:'#fff', color:'#000', border:'none', borderRadius:'10px', padding:'10px 16px', fontSize:'13px', fontWeight:800, cursor: claimLoading || !claimInput.trim() ? 'not-allowed' : 'pointer', opacity: claimLoading || !claimInput.trim() ? 0.4 : 1, transition:'all 0.15s', fontFamily:'Inter, sans-serif', height:'46px', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-              </button>
-            </div>
+            {claimMonthlyCount >= CLAIM_LIMIT ? (
+              <div style={{ padding:'16px 20px', borderTop:'1px solid #1a1a1a', background:'#0d0d0d', flexShrink:0, textAlign:'center' }}>
+                <div style={{ display:'inline-flex', alignItems:'center', gap:'8px', background:'rgba(239,68,68,0.06)', border:'1px solid rgba(239,68,68,0.15)', borderRadius:'10px', padding:'10px 16px' }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  <span style={{ fontSize:'12px', color:'#ef4444', fontWeight:600 }}>Monthly limit reached ({CLAIM_LIMIT}/{CLAIM_LIMIT}) — resets next month</span>
+                </div>
+              </div>
+            ) : (
+              <div style={{ padding:'12px 16px', borderTop:'1px solid #1a1a1a', display:'flex', flexDirection:'column', gap:'6px', flexShrink:0, background:'#0d0d0d' }}>
+                <div style={{ display:'flex', gap:'8px', alignItems:'flex-end' }}>
+                  <textarea
+                    value={claimInput}
+                    onChange={e => setClaimInput(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendClaimMessage(); } }}
+                    placeholder="Describe your issue or ask for a claim letter…"
+                    rows={2}
+                    style={{ flex:1, background:'#141414', border:'1px solid #242424', borderRadius:'10px', color:'#fff', padding:'10px 14px', fontSize:'13px', outline:'none', resize:'none', fontFamily:'Inter, sans-serif', lineHeight:'1.5', transition:'border-color 0.15s' }}
+                    onFocus={e => e.target.style.borderColor='#555'}
+                    onBlur={e => e.target.style.borderColor='#242424'}
+                  />
+                  <button
+                    onClick={sendClaimMessage}
+                    disabled={claimLoading || !claimInput.trim()}
+                    style={{ background:'#fff', color:'#000', border:'none', borderRadius:'10px', padding:'10px 16px', fontSize:'13px', fontWeight:800, cursor: claimLoading || !claimInput.trim() ? 'not-allowed' : 'pointer', opacity: claimLoading || !claimInput.trim() ? 0.4 : 1, transition:'all 0.15s', fontFamily:'Inter, sans-serif', height:'46px', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                  </button>
+                </div>
+                <div style={{ fontSize:'10px', color:'#333', textAlign:'right' }}>{CLAIM_LIMIT - claimMonthlyCount} chat{CLAIM_LIMIT - claimMonthlyCount === 1 ? '' : 's'} remaining this month</div>
+              </div>
+            )}
           </div>
         </div>
       )}
