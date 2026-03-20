@@ -109,7 +109,7 @@ export default function AppPage() {
   const [isMobileView, setIsMobileView] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
-  const [notifPrefs, setNotifPrefs] = useState({ enabled: false, daysBefore: 30 });
+  const [notifPrefs, setNotifPrefs] = useState({ enabled: false, daysBefore: 30, channel: 'browser' });
   const [savingNotifPrefs, setSavingNotifPrefs] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -157,7 +157,7 @@ export default function AppPage() {
   const animTimers = useRef({});
   const statValuesRef = useRef({ total:0, active:0, expiring:0, expired:0 });
   const warrantiesRef = useRef([]);
-  const notifPrefsRef = useRef({ enabled:false, daysBefore:30 });
+  const notifPrefsRef = useRef({ enabled:false, daysBefore:30, channel:'browser' });
   const unsubWarrantiesRef = useRef(null);
   const isSigningOutRef = useRef(false);
   const claimScrollRef = useRef(null);
@@ -260,8 +260,14 @@ export default function AppPage() {
           const data = profileSnap.data();
           setUserProfile(data);
           if (data.notificationPrefs) {
-            setNotifPrefs(data.notificationPrefs);
-            setSelectedDaysBefore(data.notificationPrefs.daysBefore || 30);
+            const savedChannel = data.notificationPrefs.channel === 'email' ? 'email' : 'browser';
+            const normalizedPrefs = {
+              enabled: !!data.notificationPrefs.enabled,
+              daysBefore: data.notificationPrefs.daysBefore || 30,
+              channel: savedChannel,
+            };
+            setNotifPrefs(normalizedPrefs);
+            setSelectedDaysBefore(normalizedPrefs.daysBefore);
           }
           setSettingsForm({ name: data.name || user.displayName || '', password: '' });
           // Load this month's scan usage
@@ -272,7 +278,7 @@ export default function AppPage() {
           const newProfile = {
             name: user.displayName || user.email.split('@')[0],
             email: user.email,
-            notificationPrefs: { enabled: false, daysBefore: 30 },
+            notificationPrefs: { enabled: false, daysBefore: 30, channel: 'browser' },
             createdAt: serverTimestamp()
           };
           await setDoc(profileRef, newProfile);
@@ -504,7 +510,8 @@ export default function AppPage() {
   // ── Save notification prefs ────────────────────────────────────────────────
   const saveNotifPrefs = async () => {
     if (!currentUser || savingNotifPrefs) return;
-    const prefs = { enabled: notifPrefs.enabled, daysBefore: selectedDaysBefore };
+    const channel = notifPrefs.channel === 'email' ? 'email' : 'browser';
+    const prefs = { enabled: notifPrefs.enabled, daysBefore: selectedDaysBefore, channel };
     setSavingNotifPrefs(true);
     try {
       const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 10000));
@@ -513,7 +520,54 @@ export default function AppPage() {
         timeout
       ]);
       setNotifPrefs(prefs);
-      showToast('Notification preferences saved.', 'success');
+
+      if (prefs.enabled && channel === 'browser' && typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+          showToast('Browser notification permission was not granted.', 'error');
+        }
+      }
+
+      if (prefs.enabled && channel === 'email') {
+        const recipientEmail = currentUser?.email || '';
+        if (!recipientEmail) {
+          showToast('No account email found for email notifications.', 'error');
+        } else {
+          const upcomingWarranties = warrantiesRef.current
+            .map((w) => ({ ...w, _days: daysRemaining(w.expiryDate) }))
+            .filter((w) => w._days >= 0 && w._days <= prefs.daysBefore)
+            .sort((a, b) => a._days - b._days)
+            .slice(0, 10)
+            .map((w) => ({
+              productName: w.productName || 'Unknown product',
+              brand: w.brand || '',
+              retailer: w.retailer || '',
+              expiryDate: w.expiryDate,
+              daysRemaining: w._days,
+            }));
+
+          const emailRes = await fetch('/api/send-notification-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              to: recipientEmail,
+              name: userProfile?.name || currentUser.displayName || recipientEmail.split('@')[0] || 'there',
+              daysBefore: prefs.daysBefore,
+              warranties: upcomingWarranties,
+            }),
+          });
+
+          if (!emailRes.ok) {
+            const emailErr = await emailRes.json().catch(() => ({}));
+            showToast(`Preferences saved, but email send failed: ${emailErr.error || 'unknown error'}`, 'error');
+          } else {
+            showToast('Notification preferences saved.', 'success');
+          }
+        }
+      } else {
+        showToast('Notification preferences saved.', 'success');
+      }
+
       setBellRing(true);
       setTimeout(() => setBellRing(false), 1000);
       setShowNotifModal(false);
@@ -1167,6 +1221,32 @@ export default function AppPage() {
                 </button>
               </div>
             </div>
+            <div style={{ background:'#0f0f0f', border:'1px solid #1a1a1a', borderRadius:'12px', padding:'16px', marginBottom:'16px' }}>
+              <label className="label" style={{ marginBottom:'10px' }}>Notification Channel</label>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'8px' }}>
+                {[
+                  { key:'browser', label:'Browser' },
+                  { key:'email', label:'Email' },
+                ].map((option) => {
+                  const active = (notifPrefs.channel || 'browser') === option.key;
+                  return (
+                    <button
+                      key={option.key}
+                      type="button"
+                      onClick={() => setNotifPrefs(p => ({ ...p, channel: option.key }))}
+                      style={{ padding:'9px 12px', borderRadius:'8px', border:`1px solid ${active ? '#fff' : '#1e1e1e'}`, background:active ? '#fff' : '#0f0f0f', color:active ? '#000' : '#777', fontSize:'12px', fontWeight:700, letterSpacing:'0.04em', textTransform:'uppercase', cursor:'pointer', transition:'all 0.15s' }}
+                    >
+                      {option.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <div style={{ fontSize:'11px', color:'#555', marginTop:'10px', lineHeight:'1.45' }}>
+                {(notifPrefs.channel || 'browser') === 'email'
+                  ? `Emails will be sent to ${displayEmail || 'your account email'}.`
+                  : 'Browser notifications use your current device permission settings.'}
+              </div>
+            </div>
             {notifPrefs.enabled && (
               <div style={{ marginBottom:'16px' }}>
                 <label className="label">Notify me this many days before expiry</label>
@@ -1181,32 +1261,14 @@ export default function AppPage() {
             )}
             {expiringCount > 0 && (
               <div style={{ background:'rgba(245,158,11,0.08)', border:'1px solid rgba(245,158,11,0.2)', borderRadius:'10px', padding:'12px 14px', marginBottom:'16px', fontSize:'13px', color:'#f59e0b' }}>
-                <strong>{expiringCount}</strong> warrant{expiringCount === 1 ? 'y' : 'ies'} expiring within 30 days
+                <strong>{expiringCount}</strong> warrant{expiringCount === 1 ? 'y' : 'ies'} expiring within {selectedDaysBefore} days
               </div>
             )}
-            <div style={{ display:'flex', gap:'10px', justifyContent:'space-between', alignItems:'center' }}>
-              <button className="btn-ghost" onClick={() => { 
-                if ('Notification' in window) {
-                   Notification.requestPermission().then(permission => {
-                     if (permission === 'granted') {
-                       new Notification('Aegis', { body: 'This is a test notification!' });
-                     } else {
-                       showToast('Notification permission denied.', 'error');
-                     }
-                   });
-                } else {
-                  showToast('Notifications are not supported by your browser.', 'error');
-                }
-              }} style={{ fontSize:'12px' }}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-                Test
+            <div style={{ display:'flex', gap:'10px', justifyContent:'flex-end', alignItems:'center' }}>
+              <button className="btn-ghost" onClick={() => setShowNotifModal(false)}>Cancel</button>
+              <button className="btn-primary" onClick={saveNotifPrefs} disabled={savingNotifPrefs}>
+                {savingNotifPrefs ? 'Saving…' : 'Save Preferences'}
               </button>
-              <div style={{ display:'flex', gap:'10px' }}>
-                <button className="btn-ghost" onClick={() => setShowNotifModal(false)}>Cancel</button>
-                <button className="btn-primary" onClick={saveNotifPrefs} disabled={savingNotifPrefs}>
-                  {savingNotifPrefs ? 'Saving…' : 'Save Preferences'}
-                </button>
-              </div>
             </div>
           </div>
         </div>
@@ -1264,21 +1326,6 @@ export default function AppPage() {
               <button onClick={() => setShowClaimModal(false)} style={{ background:'none', border:'1px solid #1e1e1e', borderRadius:'8px', color:'#555', cursor:'pointer', padding:'7px', lineHeight:0, transition:'all 0.15s' }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
-            </div>
-
-            {/* Warranty summary bar */}
-            <div style={{ padding:'8px 20px', borderBottom:'1px solid #111', background:'#0a0a0a', display:'flex', gap:'16px', flexShrink:0, flexWrap:'wrap' }}>
-              {[
-                ['Status', getStatus(claimWarranty).toUpperCase()],
-                claimWarranty.purchaseDate && ['Purchased', formatDate(claimWarranty.purchaseDate)],
-                ['Expires', formatDate(claimWarranty.expiryDate)],
-                claimWarranty.retailer && ['Retailer', claimWarranty.retailer],
-              ].filter(Boolean).map(([k,v]) => (
-                <div key={k} style={{ fontSize:'10px' }}>
-                  <span style={{ color:'#444', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>{k}: </span>
-                  <span style={{ color:'#888', fontWeight:600 }}>{v}</span>
-                </div>
-              ))}
             </div>
 
             {/* Messages */}

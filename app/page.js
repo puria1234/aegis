@@ -722,6 +722,50 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <hr className="divider" />
+
+      {/* PRIVACY FIRST */}
+      <section>
+        <div className="reveal" style={{ marginBottom:'56px', textAlign:'center' }}>
+          <div className="eyebrow" style={{ marginBottom:'16px' }}>Privacy First</div>
+          <h2 className="headline-lg" style={{ maxWidth:'760px', margin:'0 auto 18px' }}>Your warranty data<br/>belongs to you.</h2>
+          <p className="body-text" style={{ maxWidth:'640px', margin:'0 auto' }}>
+            Aegis is built to keep your warranties, receipts, and scan insights private by default. Your data stays secure, under your control, and never sold.
+          </p>
+        </div>
+
+        <div className="responsive-features-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))', gap:'16px' }}>
+          {[
+            {
+              title: 'Encrypted Storage',
+              desc: 'Your account and warranty records are protected in transit and at rest using modern, industry-standard security.',
+              icon: <svg width="22" height="22" viewBox="0 0 24 26" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L3 7v7c0 5 4.5 9.5 9 11 4.5-1.5 9-6 9-11V7L12 2z"/><path d="M9 12l2 2 4-4"/></svg>,
+            },
+            {
+              title: 'Never Sold',
+              desc: 'We do not sell your personal information, receipt data, or AI scan history. Ever.',
+              icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/><path d="M20 12 9 23l-5-5"/></svg>,
+            },
+            {
+              title: 'Private By Default',
+              desc: 'Your dashboard, claim chats, and scan results are visible only to your account unless you choose to share them.',
+              icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>,
+            },
+            {
+              title: 'Delete Anytime',
+              desc: 'Delete individual warranties in-app anytime, or request full account deletion and we will permanently remove your data.',
+              icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>,
+            },
+          ].map((item) => (
+            <div key={item.title} className="feature-card reveal">
+              <div className="feature-icon">{item.icon}</div>
+              <div className="feature-title">{item.title}</div>
+              <div className="feature-desc">{item.desc}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* BIG STATEMENT */}
       <div style={{ background:'#0c0c0c', borderTop:'1px solid #141414', borderBottom:'1px solid #141414', padding:'100px 48px', textAlign:'center', overflow:'hidden' }} className="reveal">
         <div style={{ maxWidth:'900px', margin:'0 auto' }}>
