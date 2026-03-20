@@ -479,15 +479,14 @@ export default function LandingPage() {
                       </div>
                     </div>
 
-                    {/* ── Demo FAB: File a Claim ── */}
-                    <div style={{ position:'sticky', bottom:'20px', display:'flex', justifyContent:'flex-end', paddingRight:'24px', marginTop:'16px' }}>
-                      <div style={{ display:'inline-flex', alignItems:'center', gap:'9px', background:'#fff', borderRadius:'14px', color:'#000', fontSize:'13px', fontWeight:700, padding:'13px 20px', boxShadow:'0 4px 24px rgba(0,0,0,0.3), 0 1px 4px rgba(0,0,0,0.15)', fontFamily:'Inter, sans-serif', letterSpacing:'0.01em', cursor:'default' }}>
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                        File a Claim
-                      </div>
-                    </div>
-
                   </div>{/* end screen content */}
+
+                  {/* ── Demo FAB: File a Claim — pinned to screen corner ── */}
+                  <div style={{ position:'absolute', bottom:'20px', right:'20px', zIndex:20, display:'inline-flex', alignItems:'center', gap:'9px', background:'#fff', borderRadius:'14px', color:'#000', fontSize:'13px', fontWeight:700, padding:'13px 20px', boxShadow:'0 4px 24px rgba(0,0,0,0.3), 0 1px 4px rgba(0,0,0,0.15)', fontFamily:'Inter, sans-serif', letterSpacing:'0.01em', cursor:'default' }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    File a Claim
+                  </div>
+
                 </div>{/* end screen overlay */}
 
               </div>{/* end iPad PNG wrapper */}

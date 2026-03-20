@@ -682,25 +682,26 @@ export default function AppPage() {
     const sBg = statusBg[status];
     return (
       <div key={w.id} className="list-row" onClick={() => { setViewId(w.id); setShowViewModal(true); }} style={{ cursor:'pointer' }}>
-        <div style={{ display:'flex', alignItems:'center', gap:'10px', minWidth:0 }}>
+        <div className="list-row-main" style={{ display:'flex', alignItems:'center', gap:'10px', minWidth:0 }}>
           <div style={{ width:28, height:28, borderRadius:'7px', background:'#161616', border:'1px solid #222', display:'flex', alignItems:'center', justifyContent:'center', color:'#666', flexShrink:0 }}>
             <CategoryIcon cat={w.category} />
           </div>
           <div style={{ minWidth:0 }}>
-            <div style={{ fontWeight:600, fontSize:'13px', color:'#e0e0e0' }}>{w.productName}</div>
+            <div style={{ fontWeight:600, fontSize:'13px', color:'#e0e0e0', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{w.productName}</div>
             {w.brand && <div style={{ fontSize:'11px', color:'#444' }}>{w.brand}</div>}
+            <div className="list-row-expiry-mobile" style={{ fontSize:'11px', color:'#555', marginTop:'1px' }}>{formatDate(w.expiryDate)}</div>
           </div>
         </div>
-        <div style={{ fontSize:'12px', color:'#666' }}>{w.category || '—'}</div>
-        <div style={{ fontSize:'12px', color:'#666' }}>{formatDate(w.expiryDate)}</div>
-        <div style={{ fontSize:'12px', fontWeight:700, color:sColor }}>{days < 0 ? `${Math.abs(days)}d ago` : `${days}d`}</div>
-        <div>
+        <div className="list-col-desktop" style={{ fontSize:'12px', color:'#666' }}>{w.category || '—'}</div>
+        <div className="list-col-desktop" style={{ fontSize:'12px', color:'#666' }}>{formatDate(w.expiryDate)}</div>
+        <div style={{ fontSize:'12px', fontWeight:700, color:sColor, flexShrink:0 }}>{days < 0 ? `${Math.abs(days)}d ago` : `${days}d`}</div>
+        <div style={{ flexShrink:0 }}>
           <div style={{ display:'flex', alignItems:'center', gap:'5px', background:sBg, border:`1px solid ${sColor}22`, borderRadius:'20px', padding:'3px 8px', width:'fit-content' }}>
             <div style={{ width:5, height:5, borderRadius:'50%', background:sColor }}></div>
             <span style={{ fontSize:'10px', fontWeight:700, color:sColor, textTransform:'uppercase', letterSpacing:'0.08em' }}>{status}</span>
           </div>
         </div>
-        <div style={{ fontSize:'12px', color:'#666', fontWeight:600 }}>{formatPrice(w.price)}</div>
+        <div className="list-col-desktop" style={{ fontSize:'12px', color:'#666', fontWeight:600 }}>{formatPrice(w.price)}</div>
       </div>
     );
   };
@@ -713,11 +714,11 @@ export default function AppPage() {
         <div style={{ display:'flex', alignItems:'center', gap:'10px' }}>
           <img src="/icon.png" width="28" height="28" alt="AEGIS" style={{ borderRadius:'6px' }} />
           <span style={{ fontSize:'15px', fontWeight:'800', letterSpacing:'0.15em', textTransform:'uppercase', color:'#fff', lineHeight:1 }}>AEGIS</span>
-          <span style={{ fontSize:'12px', fontWeight:500, color:'#444', letterSpacing:'0.02em', marginLeft:'2px' }}>Warranty Tracker</span>
+          <span className="hide-mobile" style={{ fontSize:'12px', fontWeight:500, color:'#444', letterSpacing:'0.02em', marginLeft:'2px' }}>Warranty Tracker</span>
         </div>
         <div style={{ display:'flex', alignItems:'center', gap:'8px' }}>
           {/* Bell */}
-          <button onClick={() => { setShowNotifModal(true); setUserMenuOpen(false); }} style={{ position:'relative', background:'none', border:'1px solid #1e1e1e', borderRadius:'8px', padding:'7px', color:'#666', cursor:'pointer', transition:'all 0.15s', lineHeight:0 }} className={bellRing ? 'bell-ring' : ''} title="Notifications">
+          <button onClick={() => { setShowNotifModal(true); setUserMenuOpen(false); }} style={{ position:'relative', background:'none', border:'1px solid #1e1e1e', borderRadius:'8px', padding:'7px', color:'#666', cursor:'pointer', transition:'all 0.15s', lineHeight:0 }} className={`hide-mobile${bellRing ? ' bell-ring' : ''}`} title="Notifications">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
             {expiringCount > 0 && (
               <span className="notif-badge" style={{ position:'absolute', top:'-4px', right:'-4px', background:'#f59e0b', color:'#000', fontSize:'9px', fontWeight:800, borderRadius:'10px', minWidth:'16px', height:'16px', display:'flex', alignItems:'center', justifyContent:'center', padding:'0 3px' }}>
@@ -729,7 +730,7 @@ export default function AppPage() {
           <div style={{ position:'relative', alignSelf:'center' }} ref={userMenuRef}>
             <button onClick={() => setUserMenuOpen(!userMenuOpen)} style={{ display:'flex', alignItems:'center', gap:'8px', background:'#111', border:'1px solid #1e1e1e', borderRadius:'8px', padding:'6px 10px', cursor:'pointer', transition:'all 0.15s' }}>
               <UserAvatar user={currentUser} name={displayName} size={24} fontSize={11} />
-              <span style={{ fontSize:'13px', fontWeight:600, color:'#ccc' }}>{displayName}</span>
+              <span className="hide-mobile" style={{ fontSize:'13px', fontWeight:600, color:'#ccc' }}>{displayName}</span>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transition:'transform 0.2s', transform: userMenuOpen ? 'rotate(180deg)' : 'rotate(0)' }}><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             {userMenuOpen && (
@@ -1338,8 +1339,8 @@ export default function AppPage() {
 
       {/* ── Claim Product Picker Modal ── */}
       {showClaimPicker && (
-        <div className="modal-overlay" style={{ zIndex:250 }} onClick={e => { if (e.target === e.currentTarget) setShowClaimPicker(false); }}>
-          <div className="modal-box" style={{ maxWidth:'480px', width:'100%', padding:0, overflow:'hidden' }} onClick={e => e.stopPropagation()}>
+        <div className="modal-overlay claim-picker-overlay" style={{ zIndex:250 }} onClick={e => { if (e.target === e.currentTarget) setShowClaimPicker(false); }}>
+          <div className="modal-box claim-picker-box" style={{ maxWidth:'480px', width:'100%', padding:0, overflow:'hidden' }} onClick={e => e.stopPropagation()}>
 
             {/* Header */}
             <div style={{ padding:'20px 20px 16px', borderBottom:'1px solid #1a1a1a', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
