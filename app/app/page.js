@@ -106,6 +106,7 @@ export default function AppPage() {
   const [warranties, setWarranties] = useState([]);
   const [currentFilter, setCurrentFilter] = useState('all');
   const [currentView, setCurrentView] = useState('grid');
+  const [isMobileView, setIsMobileView] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [notifPrefs, setNotifPrefs] = useState({ enabled: false, daysBefore: 30 });
@@ -169,6 +170,23 @@ export default function AppPage() {
       claimScrollRef.current.scrollTop = claimScrollRef.current.scrollHeight;
     }
   }, [claimMessages, claimLoading]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mediaQuery = window.matchMedia('(max-width: 768px)');
+    const syncViewMode = (isMobile) => {
+      setIsMobileView(isMobile);
+      if (isMobile) setCurrentView('grid');
+    };
+
+    syncViewMode(mediaQuery.matches);
+    const handleChange = (event) => syncViewMode(event.matches);
+    mediaQuery.addEventListener('change', handleChange);
+
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange);
+    };
+  }, []);
 
   // ── Toast ──────────────────────────────────────────────────────────────────
   const showToast = (message, type = 'success') => {
@@ -816,14 +834,16 @@ export default function AppPage() {
             <option value="purchase-desc">Newest Purchase</option>
             <option value="price-desc">Highest Value</option>
           </select>
-          <div style={{ display:'flex', gap:'4px' }}>
-            <button className={`view-btn ${currentView==='grid'?'active':''}`} onClick={() => setCurrentView('grid')} title="Grid view">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-            </button>
-            <button className={`view-btn ${currentView==='list'?'active':''}`} onClick={() => setCurrentView('list')} title="List view">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-            </button>
-          </div>
+          {!isMobileView && (
+            <div style={{ display:'flex', gap:'4px' }}>
+              <button className={`view-btn ${currentView==='grid'?'active':''}`} onClick={() => setCurrentView('grid')} title="Grid view">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+              </button>
+              <button className={`view-btn ${currentView==='list'?'active':''}`} onClick={() => setCurrentView('list')} title="List view">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* ── Filter pills ── */}
@@ -853,7 +873,7 @@ export default function AppPage() {
               </button>
             )}
           </div>
-        ) : currentView === 'grid' ? (
+        ) : (isMobileView || currentView === 'grid') ? (
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(280px, 1fr))', gap:'12px' }}>
             {filtered.map(renderGridCard)}
           </div>
