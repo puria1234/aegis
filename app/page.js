@@ -193,11 +193,6 @@ export default function LandingPage() {
         <div className="hero-glow"></div>
 
         <div className="hero-content">
-          <div className="hero-badge hide-sm">
-            <div className="hero-badge-dot"></div>
-            <span style={{ fontSize:'11px', fontWeight:'700', letterSpacing:'0.12em', textTransform:'uppercase', color:'#888' }}>Free — No sign-in required</span>
-          </div>
-
           <h1 className="headline-xl" style={{ maxWidth:'900px' }}>
             Every<br/>Warranty.<br/><span style={{ color:'#333' }}>Protected.</span>
           </h1>
@@ -209,7 +204,7 @@ export default function LandingPage() {
               </p>
               <div style={{ display:'flex', alignItems:'center', gap:'12px', flexWrap:'wrap' }}>
                 <a href={user ? "/app" : "/login"} className="btn-cta">
-                  {user ? "Go to Dashboard" : "Start Tracking Free"}
+                  {user ? "Go to Dashboard" : "Get Started"}
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                 </a>
                 <a href="#features" className="btn-outline">Explore Features</a>
@@ -889,10 +884,10 @@ export default function LandingPage() {
               Start protecting<br/>what you own.
             </h2>
             <p style={{ fontSize:'17px', color:'#777', marginBottom:'40px', maxWidth:'420px', marginLeft:'auto', marginRight:'auto', lineHeight:'1.6' }}>
-              Free forever. No account needed. Just open it and start tracking.
+              Start tracking your warranties in minutes. Free plan available — upgrade anytime.
             </p>
             <a href="/login" className="btn-cta-dark">
-              Open Aegis — It&apos;s Free
+              Open Aegis
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </a>
           </div>
