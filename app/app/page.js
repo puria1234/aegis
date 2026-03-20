@@ -144,7 +144,11 @@ export default function AppPage() {
 
   // ── AI claim assistant ─────────────────────────────────────────────────────
   const [claimMonthlyCount, setClaimMonthlyCount] = useState(0);
-  const CLAIM_LIMIT = 5;
+  const CLAIM_LIMIT = 20;
+
+  // ── Email reminders ────────────────────────────────────────────────────────
+  const [reminderMonthlyCount, setReminderMonthlyCount] = useState(0);
+  const REMINDER_LIMIT = 5;
   const [showClaimPicker, setShowClaimPicker] = useState(false);
   const [claimPickerSearch, setClaimPickerSearch] = useState('');
   const [showClaimModal, setShowClaimModal] = useState(false);
@@ -276,6 +280,7 @@ export default function AppPage() {
           const monthKey = new Date().toISOString().slice(0, 7);
           setScanMonthlyCount(data.scanCounts?.[monthKey] || 0);
           setClaimMonthlyCount(data.claimCounts?.[monthKey] || 0);
+          setReminderMonthlyCount(data.reminderCounts?.[monthKey] || 0);
         } else {
           // Create profile if not exists
           const newProfile = {
@@ -843,7 +848,7 @@ export default function AppPage() {
                       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'5px' }}>
                         <div style={{ display:'flex', alignItems:'center', gap:'5px' }}>
                           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                          <span style={{ fontSize:'10px', fontWeight:700, color:'#555', textTransform:'uppercase', letterSpacing:'0.08em' }}>Claim Chats</span>
+                          <span style={{ fontSize:'10px', fontWeight:700, color:'#555', textTransform:'uppercase', letterSpacing:'0.08em' }}>Claim Messages</span>
                         </div>
                         <span style={{ fontSize:'11px', fontWeight:700, color: claimMonthlyCount >= CLAIM_LIMIT ? '#ef4444' : claimMonthlyCount >= CLAIM_LIMIT - 1 ? '#f59e0b' : '#4ade80' }}>
                           {claimMonthlyCount}/{CLAIM_LIMIT}
@@ -851,6 +856,21 @@ export default function AppPage() {
                       </div>
                       <div style={{ height:'3px', borderRadius:'2px', background:'#2a2a2a', overflow:'hidden' }}>
                         <div style={{ height:'100%', borderRadius:'2px', width:`${Math.min((claimMonthlyCount / CLAIM_LIMIT) * 100, 100)}%`, background: claimMonthlyCount >= CLAIM_LIMIT ? '#ef4444' : claimMonthlyCount >= CLAIM_LIMIT - 1 ? '#f59e0b' : '#4ade80', transition:'width 0.3s ease' }} />
+                      </div>
+                    </div>
+                    {/* Email reminders row */}
+                    <div>
+                      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'5px' }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:'5px' }}>
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                          <span style={{ fontSize:'10px', fontWeight:700, color:'#555', textTransform:'uppercase', letterSpacing:'0.08em' }}>Email Reminders</span>
+                        </div>
+                        <span style={{ fontSize:'11px', fontWeight:700, color: reminderMonthlyCount >= REMINDER_LIMIT ? '#ef4444' : reminderMonthlyCount >= REMINDER_LIMIT - 1 ? '#f59e0b' : '#4ade80' }}>
+                          {reminderMonthlyCount}/{REMINDER_LIMIT}
+                        </span>
+                      </div>
+                      <div style={{ height:'3px', borderRadius:'2px', background:'#2a2a2a', overflow:'hidden' }}>
+                        <div style={{ height:'100%', borderRadius:'2px', width:`${Math.min((reminderMonthlyCount / REMINDER_LIMIT) * 100, 100)}%`, background: reminderMonthlyCount >= REMINDER_LIMIT ? '#ef4444' : reminderMonthlyCount >= REMINDER_LIMIT - 1 ? '#f59e0b' : '#4ade80', transition:'width 0.3s ease' }} />
                       </div>
                     </div>
                     <div style={{ fontSize:'10px', color:'#333' }}>Resets on the 1st of each month</div>
@@ -1028,7 +1048,24 @@ export default function AppPage() {
                   <input className="input-field" type="date" value={formData.purchaseDate} onChange={e => setFormData(p => ({...p, purchaseDate:e.target.value}))} />
                 </div>
                 <div>
-                  <label className="label">Expiry Date *</label>
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'6px' }}>
+                    <label className="label" style={{ margin:0 }}>Expiry Date *</label>
+                    <div style={{ display:'flex', gap:'4px' }}>
+                      {[1,2,3,5].map(yr => (
+                        <button key={yr} type="button"
+                          onClick={() => {
+                            const base = formData.purchaseDate ? new Date(formData.purchaseDate + 'T00:00:00') : new Date();
+                            base.setFullYear(base.getFullYear() + yr);
+                            setFormData(p => ({ ...p, expiryDate: base.toISOString().slice(0,10) }));
+                          }}
+                          style={{ background:'#1a1a1a', border:'1px solid #2a2a2a', color:'#666', borderRadius:'5px', padding:'3px 7px', fontSize:'10px', fontWeight:700, cursor:'pointer', transition:'all 0.15s' }}
+                          onMouseOver={e => { e.currentTarget.style.borderColor='#444'; e.currentTarget.style.color='#ccc'; }}
+                          onMouseOut={e => { e.currentTarget.style.borderColor='#2a2a2a'; e.currentTarget.style.color='#666'; }}>
+                          +{yr}yr
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                   <input className="input-field" type="date" value={formData.expiryDate} onChange={e => setFormData(p => ({...p, expiryDate:e.target.value}))} required />
                 </div>
                 <div>
@@ -1405,7 +1442,7 @@ export default function AppPage() {
               <div style={{ padding:'16px 20px', borderTop:'1px solid #1a1a1a', background:'#0d0d0d', flexShrink:0, textAlign:'center' }}>
                 <div style={{ display:'inline-flex', alignItems:'center', gap:'8px', background:'rgba(239,68,68,0.06)', border:'1px solid rgba(239,68,68,0.15)', borderRadius:'10px', padding:'10px 16px' }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                  <span style={{ fontSize:'12px', color:'#ef4444', fontWeight:600 }}>Monthly limit reached ({CLAIM_LIMIT}/{CLAIM_LIMIT}) — resets next month</span>
+                  <span style={{ fontSize:'12px', color:'#ef4444', fontWeight:600 }}>Message limit reached ({CLAIM_LIMIT}/{CLAIM_LIMIT}) — resets next month</span>
                 </div>
               </div>
             ) : (
@@ -1428,7 +1465,6 @@ export default function AppPage() {
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                   </button>
                 </div>
-                <div style={{ fontSize:'10px', color:'#333', textAlign:'right' }}>{CLAIM_LIMIT - claimMonthlyCount} chat{CLAIM_LIMIT - claimMonthlyCount === 1 ? '' : 's'} remaining this month</div>
               </div>
             )}
           </div>

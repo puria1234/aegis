@@ -682,7 +682,7 @@ export default function LandingPage() {
             <div className="feature-card" style={{ padding:'20px', textAlign:'center', cursor:'default' }}>
               <div style={{ display:'flex', justifyContent:'center', marginBottom:'10px' }}>
                 <div className="cat-icon">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v9a2 2 0 0 1-2 2h-2"/><circle cx="9" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="3" width="15" height="13" rx="1"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
                 </div>
               </div>
               <div style={{ fontSize:'11px', fontWeight:'700', color:'#666', letterSpacing:'0.06em', textTransform:'uppercase' }}>Automotive</div>
@@ -704,15 +704,6 @@ export default function LandingPage() {
                 </div>
               </div>
               <div style={{ fontSize:'11px', fontWeight:'700', color:'#666', letterSpacing:'0.06em', textTransform:'uppercase' }}>Tools</div>
-            </div>
-
-            <div className="feature-card" style={{ padding:'20px', textAlign:'center', cursor:'default' }}>
-              <div style={{ display:'flex', justifyContent:'center', marginBottom:'10px' }}>
-                <div className="cat-icon">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="3" width="15" height="13" rx="1"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-                </div>
-              </div>
-              <div style={{ fontSize:'11px', fontWeight:'700', color:'#666', letterSpacing:'0.06em', textTransform:'uppercase' }}>&amp; More</div>
             </div>
 
           </div>
@@ -814,7 +805,7 @@ export default function LandingPage() {
                 'Unlimited warranties',
                 '5 AI receipt scans / month',
                 '5 email reminders / month',
-                '5 claim assistant chats / month',
+                '20 claim assistant messages / month',
                 'Receipt & document storage',
               ].map(f => (
                 <div key={f} style={{ display:'flex', alignItems:'center', gap:'10px' }}>
@@ -852,8 +843,8 @@ export default function LandingPage() {
               {[
                 '10 AI receipt scans / month',
                 '10 email reminders / month',
-                '10 claim assistant chats / month',
-                'Bulk import via CSV',
+                '40 claim assistant messages / month',
+                'Bulk import/export via CSV',
                 'Early access to new features',
               ].map(f => (
                 <div key={f} style={{ display:'flex', alignItems:'center', gap:'10px' }}>
