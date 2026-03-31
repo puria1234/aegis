@@ -16,7 +16,8 @@ jobs:
     steps:
       - name: Call send-reminders API
         run: |
-          STATUS=$(curl --silent --output /tmp/response.json --write-out "%{http_code}" \
+          STATUS=$(curl -L --silent --show-error \
+            --output /tmp/response.json --write-out "%{http_code}" \
             --request GET \
             --header "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
             "${{ secrets.APP_BASE_URL }}/api/cron/send-reminders")
@@ -25,9 +26,9 @@ jobs:
           echo "Response:"
           cat /tmp/response.json
 
-          if [ "$STATUS" -ne 200 ]; then
+          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 300 ]; then
+            echo "✅ Cron job succeeded ($STATUS)"
+          else
             echo "❌ Cron job failed with status $STATUS"
             exit 1
           fi
-
-          echo "✅ Cron job completed successfully"
