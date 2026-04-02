@@ -23,7 +23,7 @@ export default function TermsPage() {
           <p style={{ fontSize:'15px', color:'#666', lineHeight:'1.75', marginBottom:'16px' }}>Aegis is a warranty tracking tool for personal and household use. You agree to use the service only for lawful purposes and in a manner that does not infringe the rights of others. You may not attempt to gain unauthorized access to other users' data or to the underlying infrastructure.</p>
 
           <h2 style={{ fontSize:'18px', fontWeight:'700', margin:'40px 0 12px', color:'#ccc' }}>3. Your Account</h2>
-          <p style={{ fontSize:'15px', color:'#666', lineHeight:'1.75', marginBottom:'16px' }}>You are responsible for maintaining the security of your account. Aegis does not handle or store your password. Authentication is managed by Google's cloud identity infrastructure, which handles all credential storage and verification. If you sign in with Google, your account security is governed by your Google account settings. You agree to notify us immediately at theaegisofficial@protonmail.com of any suspected unauthorized access to your account.</p>
+          <p style={{ fontSize:'15px', color:'#666', lineHeight:'1.75', marginBottom:'16px' }}>You are responsible for maintaining the security of your account. Aegis does not handle or store your password. Authentication is managed by Google's cloud identity infrastructure, which handles all credential storage and verification. If you sign in with Google, your account security is governed by your Google account settings.</p>
 
           <h2 style={{ fontSize:'18px', fontWeight:'700', margin:'40px 0 12px', color:'#ccc' }}>4. Data and Privacy</h2>
           <p style={{ fontSize:'15px', color:'#666', lineHeight:'1.75', marginBottom:'16px' }}>Your warranty data is stored in Google-operated cloud infrastructure, encrypted at rest and in transit, and accessible only to your authenticated account. Data is not shared with or sold to third parties. When you use AI features, relevant warranty details or receipt images are sent to an AI processing service solely to generate a response and are not retained. Please review our <a href="/privacy" style={{ color:'#888' }}>Privacy Policy</a> for full details.</p>
@@ -36,9 +36,6 @@ export default function TermsPage() {
 
           <h2 style={{ fontSize:'18px', fontWeight:'700', margin:'40px 0 12px', color:'#ccc' }}>7. Changes to Terms</h2>
           <p style={{ fontSize:'15px', color:'#666', lineHeight:'1.75', marginBottom:'16px' }}>We reserve the right to update these terms at any time. Continued use of Aegis after changes constitutes your acceptance of the updated terms.</p>
-
-          <h2 style={{ fontSize:'18px', fontWeight:'700', margin:'40px 0 12px', color:'#ccc' }}>8. Contact</h2>
-          <p style={{ fontSize:'15px', color:'#666', lineHeight:'1.75', marginBottom:'16px' }}>For any questions regarding these terms, please contact us at <a href="mailto:theaegisofficial@protonmail.com" style={{ color:'#888', textDecoration:'none' }}>theaegisofficial@protonmail.com</a>.</p>
         </main>
         <footer style={{ textAlign:'center', padding:'40px 24px', borderTop:'1px solid #141414', fontSize:'12px', color:'#333' }}>
           &copy; 2026 Aegis. All rights reserved.

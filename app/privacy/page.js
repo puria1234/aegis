@@ -31,7 +31,7 @@ export default function PrivacyPage() {
           <p style={{ fontSize:'15px', color:'#666', lineHeight:'1.75', marginBottom:'16px' }}>Aegis offers two AI-powered features: receipt scanning and a claim filing assistant. When you use receipt scanning, the receipt image is uploaded to a temporary image host and the resulting URL is sent to an AI model to extract warranty fields. When you use the claim assistant, your message history and the relevant warranty details (product name, brand, expiry date, retailer) are sent to an AI model to generate responses. Neither feature stores your data beyond the immediate processing request. No personally identifiable information beyond what is necessary to answer your query is sent to AI services.</p>
 
           <h2 style={{ fontSize:'18px', fontWeight:'700', margin:'40px 0 12px', color:'#ccc' }}>5. Data Retention</h2>
-          <p style={{ fontSize:'15px', color:'#666', lineHeight:'1.75', marginBottom:'16px' }}>Your data is retained as long as your account exists. You may delete individual warranties at any time from within the app. To request full account deletion and erasure of all associated data, email us at theaegisofficial@protonmail.com.</p>
+          <p style={{ fontSize:'15px', color:'#666', lineHeight:'1.75', marginBottom:'16px' }}>Your data is retained as long as your account exists. You may delete individual warranties at any time from within the app.</p>
 
           <h2 style={{ fontSize:'18px', fontWeight:'700', margin:'40px 0 12px', color:'#ccc' }}>6. Cookies and Local Storage</h2>
           <p style={{ fontSize:'15px', color:'#666', lineHeight:'1.75', marginBottom:'16px' }}>Aegis uses browser-local storage mechanisms to persist your authentication session so you remain signed in between visits. This is managed by the underlying identity platform and stores only your session token — no personal data. No tracking cookies or third-party analytics scripts are used anywhere on Aegis.</p>
@@ -42,8 +42,6 @@ export default function PrivacyPage() {
           <h2 style={{ fontSize:'18px', fontWeight:'700', margin:'40px 0 12px', color:'#ccc' }}>8. Changes to This Policy</h2>
           <p style={{ fontSize:'15px', color:'#666', lineHeight:'1.75', marginBottom:'16px' }}>We may update this Privacy Policy from time to time. We will notify you of significant changes by posting the updated policy on this page with a revised date.</p>
 
-          <h2 style={{ fontSize:'18px', fontWeight:'700', margin:'40px 0 12px', color:'#ccc' }}>9. Contact</h2>
-          <p style={{ fontSize:'15px', color:'#666', lineHeight:'1.75', marginBottom:'16px' }}>If you have any questions about this Privacy Policy, please contact us at <a href="mailto:theaegisofficial@protonmail.com" style={{ color:'#888', textDecoration:'none' }}>theaegisofficial@protonmail.com</a>.</p>
         </main>
         <footer style={{ textAlign:'center', padding:'40px 24px', borderTop:'1px solid #141414', fontSize:'12px', color:'#333' }}>
           &copy; 2026 Aegis. All rights reserved.
