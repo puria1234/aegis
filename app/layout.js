@@ -11,7 +11,7 @@ export const metadata = {
   title: 'Aegis',
   description: 'Track and manage all your product warranties in one place.',
   icons: {
-    icon: '/icon.png',
+    icon: '/favicon.png',
     apple: [
       { url: '/apple-touch-icon-180.png', sizes: '180x180', type: 'image/png' },
       { url: '/apple-touch-icon-152.png', sizes: '152x152', type: 'image/png' },
