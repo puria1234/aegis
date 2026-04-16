@@ -828,34 +828,11 @@ export default function LandingPage() {
             {/* Glow accent */}
             <div style={{ position:'absolute', top:'-40px', right:'-40px', width:'160px', height:'160px', borderRadius:'50%', background:'radial-gradient(circle, rgba(255,255,255,0.04) 0%, transparent 70%)', pointerEvents:'none' }} />
 
-            <div style={{ marginBottom:'28px' }}>
-              <div style={{ marginBottom:'12px' }}>
-                <div style={{ fontSize:'11px', fontWeight:'700', letterSpacing:'0.12em', textTransform:'uppercase', color:'#fff' }}>Pro</div>
+            <div style={{ display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center', minHeight:'100%', flex:1, textAlign:'center', gap:'14px' }}>
+              <div style={{ fontSize:'11px', fontWeight:'700', letterSpacing:'0.12em', textTransform:'uppercase', color:'#fff' }}>Pro</div>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.12)', color:'#fff', padding:'14px 20px', borderRadius:'10px', fontSize:'12px', fontWeight:'800', textTransform:'uppercase', letterSpacing:'0.12em', cursor:'default' }}>
+                Pro plan coming soon
               </div>
-              <div style={{ display:'flex', alignItems:'flex-end', gap:'6px', marginBottom:'8px' }}>
-                <span style={{ fontSize:'48px', fontWeight:'800', letterSpacing:'-0.03em', color:'#fff', lineHeight:1 }}>$4.99</span>
-                <span style={{ fontSize:'14px', color:'#444', marginBottom:'8px' }}>/month</span>
-              </div>
-              <div style={{ fontSize:'13px', color:'#555' }}>Everything in Free, plus:</div>
-            </div>
-
-            <div style={{ display:'flex', flexDirection:'column', gap:'14px', marginBottom:'36px', flex:1 }}>
-              {[
-                '10 AI receipt scans / month',
-                '10 email reminders / month',
-                '40 claim assistant messages / month',
-                'Bulk import/export via CSV',
-                'Early access to new features',
-              ].map(f => (
-                <div key={f} style={{ display:'flex', alignItems:'center', gap:'10px' }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                  <span style={{ fontSize:'13px', color:'#888' }}>{f}</span>
-                </div>
-              ))}
-            </div>
-
-            <div style={{ display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.12)', color:'#fff', padding:'14px 20px', borderRadius:'10px', fontSize:'12px', fontWeight:'800', textTransform:'uppercase', letterSpacing:'0.12em', cursor:'default' }}>
-              Coming Soon
             </div>
           </div>
 

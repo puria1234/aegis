@@ -144,11 +144,7 @@ export default function AppPage() {
 
   // ── AI claim assistant ─────────────────────────────────────────────────────
   const [claimMonthlyCount, setClaimMonthlyCount] = useState(0);
-  const CLAIM_LIMIT = 20;
-
-  // ── Email reminders ────────────────────────────────────────────────────────
-  const [reminderMonthlyCount, setReminderMonthlyCount] = useState(0);
-  const REMINDER_LIMIT = 5;
+  const CLAIM_LIMIT = 10;
   const [showClaimPicker, setShowClaimPicker] = useState(false);
   const [claimPickerSearch, setClaimPickerSearch] = useState('');
   const [showClaimModal, setShowClaimModal] = useState(false);
@@ -266,11 +262,10 @@ export default function AppPage() {
           const data = profileSnap.data();
           setUserProfile(data);
           if (data.notificationPrefs) {
-            const savedChannel = data.notificationPrefs.channel === 'email' ? 'email' : 'browser';
             const normalizedPrefs = {
               enabled: !!data.notificationPrefs.enabled,
               daysBefore: data.notificationPrefs.daysBefore || 30,
-              channel: savedChannel,
+              channel: 'browser',
             };
             setNotifPrefs(normalizedPrefs);
             setSelectedDaysBefore(normalizedPrefs.daysBefore);
@@ -280,7 +275,6 @@ export default function AppPage() {
           const monthKey = new Date().toISOString().slice(0, 7);
           setScanMonthlyCount(data.scanCounts?.[monthKey] || 0);
           setClaimMonthlyCount(data.claimCounts?.[monthKey] || 0);
-          setReminderMonthlyCount(data.reminderCounts?.[monthKey] || 0);
         } else {
           // Create profile if not exists
           const newProfile = {
@@ -526,8 +520,7 @@ export default function AppPage() {
   // ── Save notification prefs ────────────────────────────────────────────────
   const saveNotifPrefs = async () => {
     if (!currentUser || savingNotifPrefs) return;
-    const channel = notifPrefs.channel === 'email' ? 'email' : 'browser';
-    const prefs = { enabled: notifPrefs.enabled, daysBefore: selectedDaysBefore, channel };
+    const prefs = { enabled: notifPrefs.enabled, daysBefore: selectedDaysBefore, channel: 'browser' };
     setSavingNotifPrefs(true);
     try {
       const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 10000));
@@ -537,53 +530,14 @@ export default function AppPage() {
       ]);
       setNotifPrefs(prefs);
 
-      if (prefs.enabled && channel === 'browser' && typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+      if (prefs.enabled && typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
         const permission = await Notification.requestPermission();
         if (permission !== 'granted') {
           showToast('Browser notification permission was not granted.', 'error');
         }
       }
 
-      if (prefs.enabled && channel === 'email') {
-        const recipientEmail = currentUser?.email || '';
-        if (!recipientEmail) {
-          showToast('No account email found for email notifications.', 'error');
-        } else {
-          const upcomingWarranties = warrantiesRef.current
-            .map((w) => ({ ...w, _days: daysRemaining(w.expiryDate) }))
-            .filter((w) => w._days >= 0 && w._days <= prefs.daysBefore)
-            .sort((a, b) => a._days - b._days)
-            .slice(0, 10)
-            .map((w) => ({
-              productName: w.productName || 'Unknown product',
-              brand: w.brand || '',
-              retailer: w.retailer || '',
-              expiryDate: w.expiryDate,
-              daysRemaining: w._days,
-            }));
-
-          const emailRes = await fetch('/api/send-notification-email', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              to: recipientEmail,
-              name: userProfile?.name || currentUser.displayName || recipientEmail.split('@')[0] || 'there',
-              daysBefore: prefs.daysBefore,
-              warranties: upcomingWarranties,
-            }),
-          });
-
-          if (!emailRes.ok) {
-            const emailErr = await emailRes.json().catch(() => ({}));
-            showToast(`Preferences saved, but email send failed: ${emailErr.error || 'unknown error'}`, 'error');
-          } else {
-            showToast('Notification preferences saved.', 'success');
-          }
-        }
-      } else {
-        showToast('Notification preferences saved.', 'success');
-      }
-
+      showToast('Notification preferences saved.', 'success');
       setBellRing(true);
       setTimeout(() => setBellRing(false), 1000);
       setShowNotifModal(false);
@@ -856,21 +810,6 @@ export default function AppPage() {
                       </div>
                       <div style={{ height:'3px', borderRadius:'2px', background:'#2a2a2a', overflow:'hidden' }}>
                         <div style={{ height:'100%', borderRadius:'2px', width:`${Math.min((claimMonthlyCount / CLAIM_LIMIT) * 100, 100)}%`, background: claimMonthlyCount >= CLAIM_LIMIT ? '#ef4444' : claimMonthlyCount >= CLAIM_LIMIT - 1 ? '#f59e0b' : '#4ade80', transition:'width 0.3s ease' }} />
-                      </div>
-                    </div>
-                    {/* Email reminders row */}
-                    <div>
-                      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'5px' }}>
-                        <div style={{ display:'flex', alignItems:'center', gap:'5px' }}>
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                          <span style={{ fontSize:'10px', fontWeight:700, color:'#555', textTransform:'uppercase', letterSpacing:'0.08em' }}>Email Reminders</span>
-                        </div>
-                        <span style={{ fontSize:'11px', fontWeight:700, color: reminderMonthlyCount >= REMINDER_LIMIT ? '#ef4444' : reminderMonthlyCount >= REMINDER_LIMIT - 1 ? '#f59e0b' : '#4ade80' }}>
-                          {reminderMonthlyCount}/{REMINDER_LIMIT}
-                        </span>
-                      </div>
-                      <div style={{ height:'3px', borderRadius:'2px', background:'#2a2a2a', overflow:'hidden' }}>
-                        <div style={{ height:'100%', borderRadius:'2px', width:`${Math.min((reminderMonthlyCount / REMINDER_LIMIT) * 100, 100)}%`, background: reminderMonthlyCount >= REMINDER_LIMIT ? '#ef4444' : reminderMonthlyCount >= REMINDER_LIMIT - 1 ? '#f59e0b' : '#4ade80', transition:'width 0.3s ease' }} />
                       </div>
                     </div>
                     <div style={{ fontSize:'10px', color:'#333' }}>Resets on the 1st of each month</div>
@@ -1298,32 +1237,6 @@ export default function AppPage() {
                 >
                   <div className="toggle-thumb" style={{ transform: notifPrefs.enabled ? 'translateX(20px)' : 'translateX(2px)', background: notifPrefs.enabled ? '#000' : '#444' }}></div>
                 </button>
-              </div>
-            </div>
-            <div style={{ background:'#0f0f0f', border:'1px solid #1a1a1a', borderRadius:'12px', padding:'16px', marginBottom:'16px' }}>
-              <label className="label" style={{ marginBottom:'10px' }}>Notification Channel</label>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'8px' }}>
-                {[
-                  { key:'browser', label:'Browser' },
-                  { key:'email', label:'Email' },
-                ].map((option) => {
-                  const active = (notifPrefs.channel || 'browser') === option.key;
-                  return (
-                    <button
-                      key={option.key}
-                      type="button"
-                      onClick={() => setNotifPrefs(p => ({ ...p, channel: option.key }))}
-                      style={{ padding:'9px 12px', borderRadius:'8px', border:`1px solid ${active ? '#fff' : '#1e1e1e'}`, background:active ? '#fff' : '#0f0f0f', color:active ? '#000' : '#777', fontSize:'12px', fontWeight:700, letterSpacing:'0.04em', textTransform:'uppercase', cursor:'pointer', transition:'all 0.15s' }}
-                    >
-                      {option.label}
-                    </button>
-                  );
-                })}
-              </div>
-              <div style={{ fontSize:'11px', color:'#555', marginTop:'10px', lineHeight:'1.45' }}>
-                {(notifPrefs.channel || 'browser') === 'email'
-                  ? `Emails will be sent to ${displayEmail || 'your account email'}.`
-                  : 'Browser notifications use your current device permission settings.'}
               </div>
             </div>
             {notifPrefs.enabled && (
