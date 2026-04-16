@@ -134,7 +134,6 @@ export default function LandingPage() {
         <div className="nav-links hide-sm" style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
           <a href="#features" className="nav-link" style={{ fontSize: '11px', fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#888', textDecoration: 'none', transition: 'color 0.2s' }} onMouseOver={e => e.target.style.color = '#fff'} onMouseOut={e => e.target.style.color = '#888'}>Features</a>
           <a href="#how-it-works" className="nav-link" style={{ fontSize: '11px', fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#888', textDecoration: 'none', transition: 'color 0.2s' }} onMouseOver={e => e.target.style.color = '#fff'} onMouseOut={e => e.target.style.color = '#888'}>How It Works</a>
-          <a href="#pricing" className="nav-link" style={{ fontSize: '11px', fontWeight: '600', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#888', textDecoration: 'none', transition: 'color 0.2s' }} onMouseOver={e => e.target.style.color = '#fff'} onMouseOut={e => e.target.style.color = '#888'}>Pricing</a>
           <a href={user ? "/app" : "/login"} className="btn-cta" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#fff', color: '#000', padding: '10px 20px', borderRadius: '6px', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em', textDecoration: 'none', transition: 'all 0.2s' }}>
             {user ? "Go to Dashboard" : "Open App"}
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -179,7 +178,6 @@ export default function LandingPage() {
       >
         <a href="#features" onClick={() => setMobileMenuOpen(false)} style={{ fontSize: '20px', fontWeight: '700', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#fff', textDecoration: 'none' }}>Features</a>
         <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)} style={{ fontSize: '20px', fontWeight: '700', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#fff', textDecoration: 'none' }}>How It Works</a>
-        <a href="#pricing" onClick={() => setMobileMenuOpen(false)} style={{ fontSize: '20px', fontWeight: '700', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#fff', textDecoration: 'none' }}>Pricing</a>
         <a href={user ? "/app" : "/login"} onClick={() => setMobileMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#fff', color: '#000', padding: '14px 28px', borderRadius: '8px', fontSize: '14px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em', textDecoration: 'none', marginTop: '16px' }}>
           {user ? "Go to Dashboard" : "Open App"}
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -777,68 +775,6 @@ export default function LandingPage() {
 
       <hr className="divider" />
 
-      {/* PRICING */}
-      <section id="pricing">
-        <div className="reveal" style={{ marginBottom:'56px', textAlign:'center' }}>
-          <div className="eyebrow" style={{ marginBottom:'16px' }}>Pricing</div>
-          <h2 className="headline-lg" style={{ maxWidth:'700px', margin:'0 auto 18px' }}>Simple, transparent<br/>pricing.</h2>
-          <p className="body-text" style={{ maxWidth:'520px', margin:'0 auto' }}>
-            Start free. Upgrade when you&apos;re ready for the full Aegis experience.
-          </p>
-        </div>
-
-        <div className="reveal" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))', gap:'20px', maxWidth:'780px', margin:'0 auto' }}>
-
-          {/* FREE PLAN */}
-          <div style={{ background:'#0d0d0d', border:'1px solid #1e1e1e', borderRadius:'20px', padding:'36px 32px', display:'flex', flexDirection:'column' }}>
-            <div style={{ marginBottom:'28px' }}>
-              <div style={{ fontSize:'11px', fontWeight:'700', letterSpacing:'0.12em', textTransform:'uppercase', color:'#555', marginBottom:'12px' }}>Free</div>
-              <div style={{ display:'flex', alignItems:'flex-end', gap:'6px', marginBottom:'8px' }}>
-                <span style={{ fontSize:'48px', fontWeight:'800', letterSpacing:'-0.03em', color:'#fff', lineHeight:1 }}>$0</span>
-                <span style={{ fontSize:'14px', color:'#444', marginBottom:'8px' }}>/month</span>
-              </div>
-              <div style={{ fontSize:'13px', color:'#555' }}>Forever free. No credit card needed.</div>
-            </div>
-
-            <div style={{ display:'flex', flexDirection:'column', gap:'14px', marginBottom:'36px', flex:1 }}>
-              {[
-                'Unlimited warranties',
-                '5 AI receipt scans / month',
-                '5 email reminders / month',
-                '20 claim assistant messages / month',
-                'Receipt & document storage',
-              ].map(f => (
-                <div key={f} style={{ display:'flex', alignItems:'center', gap:'10px' }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                  <span style={{ fontSize:'13px', color:'#888' }}>{f}</span>
-                </div>
-              ))}
-            </div>
-
-            <a href={user ? '/app' : '/login'} style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:'8px', background:'#1a1a1a', border:'1px solid #2a2a2a', color:'#fff', padding:'14px 20px', borderRadius:'10px', fontSize:'12px', fontWeight:'700', textTransform:'uppercase', letterSpacing:'0.08em', textDecoration:'none', transition:'all 0.2s', cursor:'pointer' }}
-              onMouseOver={e => { e.currentTarget.style.background='#222'; e.currentTarget.style.borderColor='#333'; }}
-              onMouseOut={e => { e.currentTarget.style.background='#1a1a1a'; e.currentTarget.style.borderColor='#2a2a2a'; }}>
-              {user ? 'Go to Dashboard' : 'Get Started Free'}
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-            </a>
-          </div>
-
-          {/* PRO PLAN */}
-          <div style={{ background:'#0d0d0d', border:'1px solid #2a2a2a', borderRadius:'20px', padding:'36px 32px', display:'flex', flexDirection:'column', position:'relative', overflow:'hidden' }}>
-            {/* Glow accent */}
-            <div style={{ position:'absolute', top:'-40px', right:'-40px', width:'160px', height:'160px', borderRadius:'50%', background:'radial-gradient(circle, rgba(255,255,255,0.04) 0%, transparent 70%)', pointerEvents:'none' }} />
-
-            <div style={{ display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center', minHeight:'100%', flex:1, textAlign:'center', gap:'14px' }}>
-              <div style={{ fontSize:'11px', fontWeight:'700', letterSpacing:'0.12em', textTransform:'uppercase', color:'#fff' }}>Pro</div>
-              <div style={{ display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.12)', color:'#fff', padding:'14px 20px', borderRadius:'10px', fontSize:'12px', fontWeight:'800', textTransform:'uppercase', letterSpacing:'0.12em', cursor:'default' }}>
-                Pro plan coming soon
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </section>
-
       {/* FINAL CTA */}
       <section>
         <div className="cta-section reveal">
@@ -852,7 +788,7 @@ export default function LandingPage() {
               Start protecting<br/>what you own.
             </h2>
             <p style={{ fontSize:'17px', color:'#777', marginBottom:'40px', maxWidth:'420px', marginLeft:'auto', marginRight:'auto', lineHeight:'1.6' }}>
-              Start tracking your warranties in minutes. Free plan available — upgrade anytime.
+              Start tracking your warranties in minutes. Free to use.
             </p>
             <a href="/login" className="btn-cta-dark">
               Open Aegis

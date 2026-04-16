@@ -153,8 +153,12 @@ export default function AppPage() {
   const [claimInput, setClaimInput] = useState('');
   const [claimLoading, setClaimLoading] = useState(false);
 
+  const [testingNotif, setTestingNotif] = useState(false);
+  const [notifPermission, setNotifPermission] = useState('default');
+
   // ── Refs ───────────────────────────────────────────────────────────────────
   const userMenuRef = useRef(null);
+  const loadedMonthKeyRef = useRef(new Date().toISOString().slice(0, 7));
   const toastTimerRef = useRef(null);
   const animTimers = useRef({});
   const statValuesRef = useRef({ total:0, active:0, expiring:0, expired:0 });
@@ -381,7 +385,12 @@ export default function AppPage() {
       }));
       // Save updated scan count to Firestore
       const monthKey = new Date().toISOString().slice(0, 7);
-      const newCount = scanMonthlyCount + 1;
+      const base = monthKey === loadedMonthKeyRef.current ? scanMonthlyCount : 0;
+      if (monthKey !== loadedMonthKeyRef.current) {
+        loadedMonthKeyRef.current = monthKey;
+        setClaimMonthlyCount(0);
+      }
+      const newCount = base + 1;
       setScanMonthlyCount(newCount);
       await setDoc(doc(db, 'users', currentUser.uid), {
         scanCounts: { [monthKey]: newCount }
@@ -427,7 +436,12 @@ export default function AppPage() {
       setClaimMessages(prev => [...prev, { role: 'assistant', content: json.message }]);
       // Save updated claim count to Firestore
       const monthKey = new Date().toISOString().slice(0, 7);
-      const newCount = claimMonthlyCount + 1;
+      const base = monthKey === loadedMonthKeyRef.current ? claimMonthlyCount : 0;
+      if (monthKey !== loadedMonthKeyRef.current) {
+        loadedMonthKeyRef.current = monthKey;
+        setScanMonthlyCount(0);
+      }
+      const newCount = base + 1;
       setClaimMonthlyCount(newCount);
       await setDoc(doc(db, 'users', currentUser.uid), {
         claimCounts: { [monthKey]: newCount }
@@ -514,6 +528,32 @@ export default function AppPage() {
       console.error(err);
     } finally {
       setDeletingWarranty(false);
+    }
+  };
+
+  // ── Test browser notification ──────────────────────────────────────────────
+  const sendTestNotification = async () => {
+    if (typeof window === 'undefined' || !('Notification' in window)) {
+      showToast('Browser notifications are not supported on this device.', 'error');
+      return;
+    }
+    setTestingNotif(true);
+    try {
+      let permission = Notification.permission;
+      if (permission === 'default') {
+        permission = await Notification.requestPermission();
+        setNotifPermission(permission);
+      }
+      if (permission === 'denied') {
+        showToast('Notifications are blocked — enable them in your browser settings.', 'error');
+        return;
+      }
+      new Notification('Aegis — Test Notification', {
+        body: 'Browser notifications are working correctly.',
+        icon: '/favicon.png',
+      });
+    } finally {
+      setTestingNotif(false);
     }
   };
 
@@ -760,7 +800,7 @@ export default function AppPage() {
         </div>
         <div style={{ display:'flex', alignItems:'center', gap:'8px' }}>
           {/* Bell */}
-          <button onClick={() => { setShowNotifModal(true); setUserMenuOpen(false); }} style={{ position:'relative', background:'none', border:'1px solid #1e1e1e', borderRadius:'8px', padding:'7px', color:'#666', cursor:'pointer', transition:'all 0.15s', lineHeight:0 }} className={`hide-mobile${bellRing ? ' bell-ring' : ''}`} title="Notifications">
+          <button onClick={() => { setShowNotifModal(true); setUserMenuOpen(false); if (typeof window !== 'undefined' && 'Notification' in window) setNotifPermission(Notification.permission); }} style={{ position:'relative', background:'none', border:'1px solid #1e1e1e', borderRadius:'8px', padding:'7px', color:'#666', cursor:'pointer', transition:'all 0.15s', lineHeight:0 }} className={`hide-mobile${bellRing ? ' bell-ring' : ''}`} title="Notifications">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
             {expiringCount > 0 && (
               <span className="notif-badge" style={{ position:'absolute', top:'-4px', right:'-4px', background:'#f59e0b', color:'#000', fontSize:'9px', fontWeight:800, borderRadius:'10px', minWidth:'16px', height:'16px', display:'flex', alignItems:'center', justifyContent:'center', padding:'0 3px' }}>
@@ -815,7 +855,7 @@ export default function AppPage() {
                     <div style={{ fontSize:'10px', color:'#333' }}>Resets on the 1st of each month</div>
                   </div>
                 </div>
-                <button onClick={() => { setShowNotifModal(true); setUserMenuOpen(false); }} style={{ display:'flex', alignItems:'center', gap:'10px', width:'100%', padding:'9px 12px', background:'none', border:'none', color:'#888', fontSize:'13px', cursor:'pointer', borderRadius:'7px', transition:'all 0.15s', textAlign:'left' }} onMouseOver={e=>e.currentTarget.style.background='#161616'} onMouseOut={e=>e.currentTarget.style.background='none'}>
+                <button onClick={() => { setShowNotifModal(true); setUserMenuOpen(false); if (typeof window !== 'undefined' && 'Notification' in window) setNotifPermission(Notification.permission); }} style={{ display:'flex', alignItems:'center', gap:'10px', width:'100%', padding:'9px 12px', background:'none', border:'none', color:'#888', fontSize:'13px', cursor:'pointer', borderRadius:'7px', transition:'all 0.15s', textAlign:'left' }} onMouseOver={e=>e.currentTarget.style.background='#161616'} onMouseOut={e=>e.currentTarget.style.background='none'}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                   Notifications
                 </button>
@@ -1223,6 +1263,33 @@ export default function AppPage() {
               <button onClick={() => setShowNotifModal(false)} style={{ background:'none', border:'1px solid #1e1e1e', borderRadius:'8px', color:'#555', cursor:'pointer', padding:'8px', lineHeight:0 }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
+            </div>
+            {/* Browser notification info */}
+            <div style={{ background:'#0f0f0f', border:'1px solid #1a1a1a', borderRadius:'12px', padding:'14px 16px', marginBottom:'12px', display:'flex', alignItems:'center', justifyContent:'space-between', gap:'12px' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:'10px' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                <div>
+                  <div style={{ fontSize:'13px', fontWeight:600, color:'#ccc' }}>Browser Notifications</div>
+                  <div style={{ fontSize:'11px', color:'#444', marginTop:'2px' }}>
+                    {notifPermission === 'granted' && 'Permission granted'}
+                    {notifPermission === 'denied' && 'Blocked — enable in browser settings'}
+                    {notifPermission === 'default' && 'Permission not yet requested'}
+                  </div>
+                </div>
+              </div>
+              <div style={{ display:'flex', alignItems:'center', gap:'8px', flexShrink:0 }}>
+                <div style={{ width:7, height:7, borderRadius:'50%', background: notifPermission === 'granted' ? '#4ade80' : notifPermission === 'denied' ? '#ef4444' : '#f59e0b', flexShrink:0 }} />
+                <button
+                  type="button"
+                  onClick={sendTestNotification}
+                  disabled={testingNotif}
+                  style={{ padding:'6px 12px', borderRadius:'7px', border:'1px solid #2a2a2a', background:'#1a1a1a', color:'#888', fontSize:'11px', fontWeight:700, letterSpacing:'0.04em', textTransform:'uppercase', cursor:'pointer', transition:'all 0.15s', whiteSpace:'nowrap' }}
+                  onMouseOver={e => { e.currentTarget.style.background='#222'; e.currentTarget.style.color='#ccc'; }}
+                  onMouseOut={e => { e.currentTarget.style.background='#1a1a1a'; e.currentTarget.style.color='#888'; }}
+                >
+                  {testingNotif ? 'Sending…' : 'Test'}
+                </button>
+              </div>
             </div>
             <div style={{ background:'#0f0f0f', border:'1px solid #1a1a1a', borderRadius:'12px', padding:'16px', marginBottom:'16px' }}>
               <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
