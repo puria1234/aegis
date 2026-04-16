@@ -168,7 +168,9 @@ export default function LoginPage() {
       <div style={{ background:'#0f0f0f', border:'1px solid #1e1e1e', borderRadius:'24px', padding:'40px 36px', width:'100%', maxWidth:'420px', position:'relative', zIndex:'1', boxShadow:'0 40px 120px rgba(0,0,0,0.6)' }}>
         {/* Logo */}
         <div style={{ textAlign:'center', marginBottom:'28px' }}>
-          <img src="/icon.png" width="48" height="48" alt="AEGIS" style={{ display: 'block', margin: '0 auto 20px auto' }} />
+          <a href="/" style={{ display:'block', marginBottom:'20px' }}>
+            <img src="/favicon.png" width="48" height="48" alt="AEGIS" style={{ display: 'block', margin: '0 auto' }} />
+          </a>
           <div style={{ fontSize:'24px', fontWeight:'800', letterSpacing:'0.15em', textTransform:'uppercase', lineHeight:1, color:'#fff' }}>Aegis</div>
           <div style={{ fontSize:'12px', color:'#444', fontWeight:600, letterSpacing:'0.1em', textTransform:'uppercase', marginTop:'6px' }}>Warranty Guardian</div>
         </div>

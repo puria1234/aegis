@@ -793,11 +793,11 @@ export default function AppPage() {
 
       {/* ── Nav ── */}
       <nav style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 24px', height:'56px', borderBottom:'1px solid #141414', background:'rgba(8,8,8,0.95)', backdropFilter:'blur(20px)', position:'sticky', top:0, zIndex:100 }}>
-        <div style={{ display:'flex', alignItems:'center', gap:'10px' }}>
-          <img src="/icon.png" width="28" height="28" alt="AEGIS" style={{ borderRadius:'6px' }} />
+        <a href="/" style={{ display:'flex', alignItems:'center', gap:'10px', textDecoration:'none' }}>
+          <img src="/favicon.png" width="28" height="28" alt="AEGIS" style={{ borderRadius:'6px' }} />
           <span style={{ fontSize:'15px', fontWeight:'800', letterSpacing:'0.15em', textTransform:'uppercase', color:'#fff', lineHeight:1 }}>AEGIS</span>
           <span className="hide-mobile" style={{ fontSize:'12px', fontWeight:500, color:'#444', letterSpacing:'0.02em', marginLeft:'2px' }}>Warranty Tracker</span>
-        </div>
+        </a>
         <div style={{ display:'flex', alignItems:'center', gap:'8px' }}>
           {/* Bell */}
           <button onClick={() => { setShowNotifModal(true); setUserMenuOpen(false); if (typeof window !== 'undefined' && 'Notification' in window) setNotifPermission(Notification.permission); }} style={{ position:'relative', background:'none', border:'1px solid #1e1e1e', borderRadius:'8px', padding:'7px', color:'#666', cursor:'pointer', transition:'all 0.15s', lineHeight:0 }} className={`hide-mobile${bellRing ? ' bell-ring' : ''}`} title="Notifications">
