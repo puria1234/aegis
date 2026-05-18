@@ -690,7 +690,7 @@ export default function LandingPage() {
             <div className="feature-card" style={{ padding:'20px', textAlign:'center', cursor:'default' }}>
               <div style={{ display:'flex', justifyContent:'center', marginBottom:'10px' }}>
                 <div className="cat-icon">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 18c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2v-1H3v1z"/><path d="M3 17V9c0-1.1.9-2 2-2h2l4-4 4 4h2a2 2 0 0 1 2 2v8"/></svg>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 17v-3c0-1 .8-2 1.8-2 1.4 0 2.8-.7 3.7-1.8L9 7.5c.6-.8 1.8-.6 2.1.4L12 11h7c1.5 0 2 1 2 2v4"/><path d="M2 17h20v1a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z"/><line x1="13" y1="14" x2="16" y2="14"/></svg>
                 </div>
               </div>
               <div style={{ fontSize:'11px', fontWeight:'700', color:'#666', letterSpacing:'0.06em', textTransform:'uppercase' }}>Footwear</div>
