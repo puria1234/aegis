@@ -88,7 +88,7 @@ function CategoryIcon({ cat }) {
     case 'Electronics': return <svg {...p}><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>;
     case 'Appliances': return <svg {...p}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>;
     case 'Automotive': return <svg {...p}><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v9a2 2 0 0 1-2 2h-2"/><circle cx="9" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>;
-    case 'Footwear': return <svg {...p}><path d="M2 18c0 1.1.9 2 2 2h16a2 2 0 0 0 2-2v-1H2v1z"/><path d="M2 17V9c0-1.1.9-2 2-2h2l3-4 4 4h4a2 2 0 0 1 2 2v8"/></svg>;
+    case 'Footwear': return <svg {...p}><path d="M2 17v-3c0-1 .8-2 1.8-2 1.4 0 2.8-.7 3.7-1.8L9 7.5c.6-.8 1.8-.6 2.1.4L12 11h7c1.5 0 2 1 2 2v4"/><path d="M2 17h20v1a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z"/><line x1="13" y1="14" x2="16" y2="14"/></svg>;
     case 'Clothing': return <svg {...p}><path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.57a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.57a2 2 0 0 0-1.34-2.23z"/></svg>;
     case 'Tools': return <svg {...p}><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>;
     case 'Furniture': return <svg {...p}><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>;
